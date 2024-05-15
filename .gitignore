@@ -1,0 +1,26 @@
+# IDEs
+.vs/
+.vscode/
+
+# Python
+**/__pycache__/
+**/__version__.py/
+**/whisper-stream/
+**/.env/
+
+# Unreal Engine
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Model/
+Model_temp/
+Platforms/
+Plugins/**/Binaries/
+Plugins/**/Content/
+Plugins/**/Intermediate/
+Saved/
+
+# Misc
+# status file is ofthen use to dump some information about the project
+status.txt

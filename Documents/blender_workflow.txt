@@ -1,0 +1,12 @@
+Export skeletal mesh from Unreal to Blender:
+
+Import FBX to Blender:
+- in Armature: select "Automatic Bone Orientation"
+
+Export skeletal mesh from Blender to Unreal:
+- in Blender select only the skeletal mesh and armature
+- export to FBX and select options:
+  - in Include: selection only (Selected Opbjects option) and uncheck: Empty, Camera, Lamp
+  - in Geometry: change smooting from "Normals Only" to "Faces"
+  - in Armature: turn off "Add Leaf Bones"
+  - turn off "Bake Animations"

@@ -1,0 +1,18 @@
+0. Install Nvidia Omniverse and once lunched the Audio2Face and the Unreal Connector
+1. open audio 2 face
+2. load the file with the config - toned_good_expresions.usd
+3. Once the file is loaded go to the Audio2Face tab in the right top panel
+4. Scroll down and make sure the "Auto generate on track change" is checked
+5. While in the same tab scroll to the top and select the directory containing audio files
+6. Below the selected directory field there is a "Track Name" dropdown, open it and scroll through files to make sure all files are listed
+7. In the same panel go to A2F Data Conversion tab and at the top of the panel set the output directory
+8. While in the same tab click on "/World/audio2face/BlendshapeSolve" in the BLENDSHAPE & JOINT CONVERSION panel
+9. Make sure that the "Format" below is set to "USD"
+10. Click on "EXPORT WEIGHTS" and wait for the magick to happen (looong wait if a lot of files)
+11. Once files are generated you import them not by usuall Unreal Engine import feature but once inside Unreal Engine:
+  - go to content browser
+  - create a directory
+  - open the directory and in empty space right lick and choose "import USD animation"
+  - in the popup window open the select files window, remambre you can select multiple files
+  - select the face skeleton
+  - make sure to set the Animation Source to "Audio2Face MetaHuman curves"

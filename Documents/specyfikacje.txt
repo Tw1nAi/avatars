@@ -1,0 +1,8 @@
+Płyta główna: ASRock Z790 GP Lightning
+Procesor: 13th Gen Intel(R) Socket 1700 LGA 10nm i9-13900KF, 3000 Mhz, 24 Core
+RAM: 128 GB DDR5-5600 Kingston
+Karta graficzna: Gainward NVIDIA GeForce RTX 4070 12 GB
+System: Windows 10 Pro
+Dysk: SSD Kingston KC3000 2TB M.2 NVME 2280 PCIE GEN 4.0 X4 (7000/7000 MB/S)
+Obudowa: Modecom Oberon PRO LE ATX USB 3.0 Black BEZ ZASILACZA
+Zasilacz: MSI Mag A750GL PCIE5 750W 120MM 80PLUS Gold
