@@ -642,7 +642,8 @@ void AAvatarsPlayerController::OnDialogStopped()
   AAvatarPawn* Avatar = GetSelectedAvatar();
   if (Avatar == nullptr) return;
 
-  if (Suggestions.Num() > 0 && RootWidget != nullptr && Avatar->ApiVersion == EApiVersion::API_v2)
+  if (Suggestions.Num() > 0 && RootWidget != nullptr && Avatar->ApiVersion == EApiVersion::API_v2 &&
+      Avatar->GetState() == EAvatarState::Idle)
   {
     RootWidget->SetSuggestionsText(Suggestions);
     RootWidget->ShowSuggestionsText();
