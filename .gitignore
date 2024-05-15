@@ -13,7 +13,6 @@ Binaries/
 Build/
 DerivedDataCache/
 Intermediate/
-Model/
 Model_temp/
 Platforms/
 Plugins/**/Binaries/
