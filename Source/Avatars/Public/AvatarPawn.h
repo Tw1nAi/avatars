@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "GameFramework/Pawn.h"
+#include "Materials/MaterialInstance.h"
 
 #include "AvatarsTypes.h"
 #include "Settings/Settings.h"
@@ -43,7 +44,7 @@ public:
   TSubclassOf<AAvatarPawn> AvatarClass;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UTexture2D* ThumbnailImage;
+  UMaterialInstance* ThumbnailImage;
 };
 
 USTRUCT(BlueprintType)

@@ -372,7 +372,7 @@ void URootWidget::CreateAvatarsThumbnails(TArray<FAvatarData> AvatarsData)
       {
         ThumbWidget->AvatarId = Avatar.Id;
         ThumbWidget->CharacterName = Avatar.Name;
-        ThumbWidget->ImageTexture = Avatar.ThumbnailImage;
+        ThumbWidget->UpdateImage(Avatar.ThumbnailImage);
         ThumbWidget->OnClickEvent.AddUObject(this, &URootWidget::OnCharacterThumbnailClick);
         ThumbWidget->Update();
       }

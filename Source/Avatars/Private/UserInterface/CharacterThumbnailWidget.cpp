@@ -10,14 +10,14 @@ void UCharacterThumbnailWidget::NativeConstruct()
   Super::NativeConstruct();
 }
 
-void UCharacterThumbnailWidget::UpdateImage(UTexture2D* InImageTexture)
+void UCharacterThumbnailWidget::UpdateImage(UObject* InImage)
 {
   FSlateBrush Brush;
-  Brush.SetResourceObject(InImageTexture);
+  Brush.SetResourceObject(InImage);
   Brush.ImageSize = FVector2D(ThumbnailSize, ThumbnailSize);
 
   CharacterImage->SetBrush(Brush);
-  ImageTexture = InImageTexture;
+  ImageSource = InImage;
 }
 
 void UCharacterThumbnailWidget::UpdateSize(float Size)
@@ -35,7 +35,7 @@ void UCharacterThumbnailWidget::UpdateSelection(const bool bInIsSelected)
 void UCharacterThumbnailWidget::Update()
 {
   UpdateSize(ThumbnailSize);
-  UpdateImage(ImageTexture);
+  UpdateImage(ImageSource);
 }
 
 void UCharacterThumbnailWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)

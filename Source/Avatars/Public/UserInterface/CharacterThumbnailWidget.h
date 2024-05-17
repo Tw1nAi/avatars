@@ -32,8 +32,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)
   FString CharacterName;
 
+  /* Should be of one the following: UMaterial, UMaterialInstance or UTexture2D */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)
-  UTexture2D* ImageTexture;
+  UObject* ImageSource;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)
   float ThumbnailSize = 250.f;
@@ -57,7 +58,7 @@ public:
   UWidgetAnimation* MouseLeaveAnimation;
 
   UFUNCTION(BlueprintCallable)
-  void UpdateImage(UTexture2D* InImageTexture);
+  void UpdateImage(UObject* InImage);
 
   UFUNCTION(BlueprintCallable)
   void UpdateSelection(const bool bInIsSelected);
