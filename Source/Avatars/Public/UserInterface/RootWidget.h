@@ -17,6 +17,7 @@
 #include "AvatarsTypes.h"
 #include "UserInterface/CharacterThumbnailWidget.h"
 #include "UserInterface/DebugInterfaceWidget.h"
+#include "UserInterface/Localisation/LanguageSwitcherWidget.h"
 #include "UserInterface/OptionsMenu.h"
 
 #include "RootWidget.generated.h"
@@ -93,20 +94,16 @@ public:
   UOverlay* CharacterSelection;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UButton* ENSetLanguageButton;
-  UFUNCTION()
-  void SetLanguageEN();
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UButton* PLSetLanguageButton;
-  UFUNCTION()
-  void SetLanguagePL();
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UButton* BackToCharacterSelectionButton;
 
   UFUNCTION()
   void OnBackToCharacterSelection();
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
+  ULanguageSwitcherWidget* LanguageSwitcher;
+
+  UFUNCTION()
+  void OnLanguageSwitch(EAvatarLanguage Language);
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UTextBlock* StatusMessge;

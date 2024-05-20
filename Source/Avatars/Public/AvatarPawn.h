@@ -32,7 +32,6 @@ struct AVATARS_API FAvatarData : public FTableRowBase
 
 public:
   FAvatarId Id;
-  FString AssetsPath;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EAvatarCharacter AvatarTag;
@@ -41,10 +40,34 @@ public:
   FString Name;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString AssetsPath;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  EApiVersion ApiVersion;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TSubclassOf<AAvatarPawn> AvatarClass;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* ThumbnailImage;
+
+  // Match incomming name by splitting it on spaces and checking all parts are maching with own splited name.
+  bool MatchByName(const FString& NameToMatch) const
+  {
+    TArray<FString> NameParts;
+    NameToMatch.ParseIntoArray(NameParts, TEXT(" "), true);
+    TArray<FString> OwnNameParts;
+    Name.ParseIntoArray(OwnNameParts, TEXT(" "), true);
+
+    if (NameParts.Num() != OwnNameParts.Num()) return false;
+
+    for (int32 i = 0; i < NameParts.Num(); i++)
+    {
+      if (NameParts[i] != OwnNameParts[i]) return false;
+    }
+
+    return true;
+  }
 };
 
 USTRUCT(BlueprintType)

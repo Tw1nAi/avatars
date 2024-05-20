@@ -66,7 +66,7 @@ public:
   virtual void NativeConstruct() override;
   virtual void SynchronizeProperties() override;
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
   UButton* Button;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Image Button", meta = (DisplayName = "Button Style"))

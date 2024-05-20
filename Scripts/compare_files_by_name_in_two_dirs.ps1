@@ -1,7 +1,7 @@
 # Define the paths to directories A and B
-$dirA = "c:\Juice\Awatary\Audio_Dialogi\WojtekTheBear\PL\Audio"
-$dirB = "c:\Juice\Awatary\UnrealProjects\Avatars\Avatars\Content\Avatars\Characters\WojtekTheBear\Dialogs\PL\Audio"
-$dirC = "C:\Juice\Awatary\Audio_Dialogi\WojtekTheBear\PL\Audio\notAddedToUE"
+$dirA = "c:\Juice\Awatary\Audio_Dialogi\JanKowalewski\EN\Audio"
+$dirB = "C:\Juice\Awatary\Audio_Dialogi\JanKowalewski\EN\Animations"
+$dirC = "c:\Juice\Awatary\Audio_Dialogi\JanKowalewski\EN\Audio_Missing"
 
 # Ensure Directory C exists
 if (-not (Test-Path -Path $dirC)) {

@@ -5,6 +5,7 @@
 void UButtonBaseWidget::NativeConstruct()
 {
   Super::NativeConstruct();
+
   if (Button != nullptr)
   {
     Button->OnPressed.Clear();
@@ -17,14 +18,11 @@ void UButtonBaseWidget::NativeConstruct()
 void UButtonBaseWidget::SynchronizeProperties()
 {
   Super::SynchronizeProperties();
-  // if (Button != nullptr)
-  // {
-  //   // Bind button events
-  //   if (Button)
-  //   {
-  //     Button->SetStyle(ButtonStyle);
-  //   }
-  // }
+
+  if (Button != nullptr)
+  {
+    Button->SetStyle(ButtonStyle);
+  }
 }
 
 void UButtonBaseWidget::OnPressedDefault()
@@ -50,6 +48,7 @@ void UButtonBaseWidget::OnPressedDefault()
 }
 
 void UButtonBaseWidget::OnReleasedDefault()
-{ // Destroy the ticker object
+{
+  // Destroy the ticker object
   HoldTicker.Reset();
 }

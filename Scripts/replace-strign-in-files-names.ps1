@@ -25,8 +25,8 @@ function Replace-StringInFileNames {
 }
 
 # Usage example
-$directory = "C:\Users\squid\Juice\Dialogi\WojtekTheBear\Fixes\Anim"
-$stringToChange = "_bsweight"
-$replacement = "animFace"
+$directory = "c:\Juice\Awatary\Audio_Dialogi\JanKowalewski\EN\Audio"
+$stringToChange = "zum"
+$replacement = "kow"
 
 Replace-StringInFileNames -directory $directory -stringToChange $stringToChange -replacement $replacement

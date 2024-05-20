@@ -168,24 +168,25 @@ void AAvatarsPlayerController::SetupApi_v1()
             ))
           return;
 
-        for (const FAvatar RemoteAvatar : Data.Avatars)
-        {
-          const bool bIsZumbach = RemoteAvatar.Name.ToString().Contains("zumbach");
-          FString SearchName = bIsZumbach ? "Jan Zumbach" : "Jan Kowalewski";
+        // for (const FAvatar RemoteAvatar : Data.Avatars)
+        // {
+        //   const bool bIsZumbach = RemoteAvatar.Name.ToString().Contains("zumbach");
+        //   FString SearchName = bIsZumbach ? "Jan Zumbach" : "Jan Kowalewski";
 
-          for (FAvatarData& LocalData : WeakController->Avatars)
-          {
-            if (LocalData.Name == SearchName)
-            {
-              LocalData.Id.v1 = RemoteAvatar.Id;
-              FString Directory = bIsZumbach ? "JanZumbach" : "JanKowalewski";
-              LocalData.AssetsPath = "/Game/Avatars/Characters/" + Directory + "/";
-              const EAvatarCharacter Tag = bIsZumbach ? EAvatarCharacter::JanZumbach : EAvatarCharacter::JanKowalewski;
-              LocalData.AvatarTag = Tag;
-              LocalData.Id.AvatarTag = Tag;
-            }
-          }
-        }
+        //   for (FAvatarData& LocalData : WeakController->Avatars)
+        //   {
+        //     if (LocalData.ApiVersion == EApiVersion::API_v1 && LocalData.MatchByName == SearchName)
+        //     {
+        //       LocalData.Id.v1 = RemoteAvatar.Id;
+        //       // // ! directory could be set in data table
+        //       // FString Directory = bIsZumbach ? "JanZumbach" : "JanKowalewski";
+        //       // LocalData.AssetsPath = "/Game/Avatars/Characters/" + Directory + "/";
+        //       // const EAvatarCharacter Tag = bIsZumbach ? EAvatarCharacter::JanZumbach : EAvatarCharacter::JanKowalewski;
+        //       // LocalData.AvatarTag = Tag;
+        //       // LocalData.Id.AvatarTag = Tag;
+        //     }
+        //   }
+        // }
 
         WeakController->OnAvatarsDataReceived();
       })
@@ -215,16 +216,35 @@ void AAvatarsPlayerController::SetupApi_v2()
           return;
         if (ULog::ErrorIf(Data.Avatars.Num() == 0, "No avatars data received from Api_v2")) return;
 
-        FAvatarData* WojtekTheBear =
-            WeakController->Avatars.FindByPredicate([](const FAvatarData& Avatar) { return Avatar.Name.Contains("Wojtek"); });
+        // FAvatarData* WojtekTheBear =
+        //     WeakController->Avatars.FindByPredicate([](const FAvatarData& Avatar) { return Avatar.Name.Contains("Wojtek"); });
 
-        if (ULog::ErrorIf(WojtekTheBear == nullptr, "Could not find Wojtek in avatars data table data.")) return;
+        // if (ULog::ErrorIf(WojtekTheBear == nullptr, "Could not find Wojtek in avatars data table data.")) return;
 
-        WojtekTheBear->Id.v2 = Data.Avatars[1].AvatarId;
-        WojtekTheBear->Name = Data.Avatars[1].AvatarName.ToString();
-        WojtekTheBear->AssetsPath = "/Game/Avatars/Characters/WojtekTheBear/";
-        WojtekTheBear->AvatarTag = EAvatarCharacter::WojtekTheBear;
-        WojtekTheBear->Id.AvatarTag = EAvatarCharacter::WojtekTheBear;
+        // WojtekTheBear->Id.v2 = Data.Avatars[1].AvatarId;
+        // WojtekTheBear->Name = Data.Avatars[1].AvatarName.ToString();
+        // WojtekTheBear->AssetsPath = "/Game/Avatars/Characters/WojtekTheBear/";
+        // WojtekTheBear->AvatarTag = EAvatarCharacter::WojtekTheBear;
+        // WojtekTheBear->Id.AvatarTag = EAvatarCharacter::WojtekTheBear;
+
+        for (const FAvatar_v2 RemoteAvatar : Data.Avatars)
+        {
+          for (FAvatarData& LocalData : WeakController->Avatars)
+          {
+            if (LocalData.ApiVersion == EApiVersion::API_v2 && LocalData.MatchByName(RemoteAvatar.AvatarName.ToString()))
+            {
+              LocalData.Id.v2 = RemoteAvatar.AvatarId;
+              LocalData.Name = RemoteAvatar.AvatarName.ToString();
+              LocalData.Id.AvatarTag = RemoteAvatar.Tag;
+              // // ! directory could be set in data table
+              // FString Directory = bIsZumbach ? "JanZumbach" : "JanKowalewski";
+              // LocalData.AssetsPath = "/Game/Avatars/Characters/" + Directory + "/";
+              // const EAvatarCharacter Tag = bIsZumbach ? EAvatarCharacter::JanZumbach : EAvatarCharacter::JanKowalewski;
+              // LocalData.AvatarTag = Tag;
+              // LocalData.Id.AvatarTag = Tag;
+            }
+          }
+        }
 
         WeakController->OnAvatarsDataReceived();
       })

@@ -26,13 +26,9 @@ void URootWidget::NativeConstruct()
     SendTextButton->OnClicked.AddDynamic(this, &URootWidget::OnSendTextButtonClick);
   }
 
-  if (PLSetLanguageButton != nullptr)
+  if (LanguageSwitcher != nullptr)
   {
-    PLSetLanguageButton->OnClicked.AddDynamic(this, &URootWidget::SetLanguagePL);
-  }
-  if (ENSetLanguageButton != nullptr)
-  {
-    ENSetLanguageButton->OnClicked.AddDynamic(this, &URootWidget::SetLanguageEN);
+    LanguageSwitcher->OnLanguageSwitchEvent.AddDynamic(this, &URootWidget::OnLanguageSwitch);
   }
 
   WidgetsHiddenByDefault.Add(StatusMessge);
@@ -230,6 +226,13 @@ void URootWidget::HideLoadingScreen()
   LoadingScreen2->Hide();
 }
 
+void URootWidget::OnLanguageSwitch(EAvatarLanguage Language)
+{
+  StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
+  UserMessage->SetVisibility(ESlateVisibility::Collapsed);
+  SetLanguage(Language);
+}
+
 EAvatarLanguage URootWidget::GetAvatarLanguage()
 {
   if (!GetController())
@@ -246,16 +249,6 @@ void URootWidget::SetLanguage(EAvatarLanguage InLanguage)
     return;
   }
   PlayerController->SetLanguage(InLanguage);
-}
-
-void URootWidget::SetLanguagePL()
-{
-  SetLanguage(EAvatarLanguage::PL);
-}
-
-void URootWidget::SetLanguageEN()
-{
-  SetLanguage(EAvatarLanguage::EN);
 }
 
 FText URootWidget::GetTranslation(FName Key)

@@ -2,15 +2,15 @@
 
 #pragma once
 
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "AvatarsPlayerController.h"
-#include "Log.h"
-
-// Engine includes
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AvatarsPlayerController.h"
+#include "AvatarsTypes.h"
+#include "Log.h"
 
 #include "Get.generated.h"
 
@@ -75,5 +75,19 @@ struct AVATARS_API FGet
 
     ULog::Error("Could not cast asset object to target class, Location: " + Location);
     return nullptr;
+  }
+
+  static FString LanguageEnumAsIsoString(EAvatarLanguage Language)
+  {
+    switch (Language)
+    {
+    case EAvatarLanguage::EN:
+      return "EN";
+    case EAvatarLanguage::PL:
+      return "PL";
+    default:
+      checkNoEntry();
+      return "";
+    }
   }
 };
