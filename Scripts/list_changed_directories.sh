@@ -1,0 +1,1 @@
+git status --porcelain | awk '{print $2}' | grep '/' | sed 's|/[^/]*$||' | sort | uniq
