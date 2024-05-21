@@ -334,11 +334,11 @@ void URootWidget::SelectThumbnailById(const FAvatarId& Id)
 
 void URootWidget::UpdateThumbnailsDisplay()
 {
-  for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
-  {
-    Thumb->SetVisibility(Thumb->bIsSelected ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
-    // Thumb->UpdateSelection(Thumb->AvatarId == Id || Thumb->Id_v2 == Id_v2);
-  }
+  // for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
+  // {
+  //   Thumb->SetVisibility(Thumb->bIsSelected ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+  //   // Thumb->UpdateSelection(Thumb->AvatarId == Id || Thumb->Id_v2 == Id_v2);
+  // }
 }
 
 void URootWidget::OnCharacterThumbnailClick(const FAvatarId& Id)

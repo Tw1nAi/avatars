@@ -73,7 +73,7 @@ public:
   bool bDebug = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
-  EAvatarCharacter DefaultAvatar = EAvatarCharacter::WojtekTheBear;
+  EAvatarCharacter DefaultAvatar;
 
   UFUNCTION(BlueprintCallable, Blueprintpure)
   const FAvatarData& GetDefaultAvatarData() const;
@@ -255,7 +255,7 @@ public:
   // ! this race first sets this as true and the other one that sees that it's true can init
   // ! post fetch operations. Remove once API v1 and API v2 are consolidated into one.
   UPROPERTY()
-  bool bApiDone = false;
+  bool bApiDone;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   TArray<FString> ExcludedPhrases;

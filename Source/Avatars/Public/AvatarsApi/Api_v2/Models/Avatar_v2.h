@@ -19,7 +19,7 @@ struct FAvatar_v2
   EAvatarCharacter Tag;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FName AvatarName;
+  FString AvatarName;
 };
 
 USTRUCT(Blueprintable, BlueprintType)

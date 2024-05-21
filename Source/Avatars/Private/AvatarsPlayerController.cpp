@@ -25,6 +25,8 @@ AAvatarsPlayerController::AAvatarsPlayerController()
 {
   ExcludedPhrases.Add(TEXT("KONIEC!"));
   IdleGreetingTimeout.TimeoutDelay = 30.0f;
+  bApiDone = true;
+  DefaultAvatar = EAvatarCharacter::WojtekTheBear;
 }
 
 AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
@@ -102,17 +104,34 @@ void AAvatarsPlayerController::LoadAvatarsData()
     for (const auto& RowIt : AvatarsDataTable->GetRowMap())
     {
       FName RowName = RowIt.Key;
-      FAvatarData* RowData = reinterpret_cast<FAvatarData*>(RowIt.Value);
+      FAvatarData* AvatarData = reinterpret_cast<FAvatarData*>(RowIt.Value);
 
-      if (RowData == nullptr)
+      if (AvatarData == nullptr)
       {
         if (bDebug) ULog::Error("Could not get row data from AvatarsDataTable.");
         continue;
       }
-
-      Avatars.Add(*RowData);
+      AvatarData->Id.AvatarTag = AvatarData->AvatarTag;
+      Avatars.Add(*AvatarData);
+      if (bDebug)
+      {
+        UE_LOG(LogTemp, Log, TEXT("AvatarTag: %d"), static_cast<uint8>(AvatarData->AvatarTag));
+        UE_LOG(LogTemp, Log, TEXT("Name: %s"), *AvatarData->Name);
+        UE_LOG(LogTemp, Log, TEXT("AssetsPath: %s"), *AvatarData->AssetsPath);
+        UE_LOG(LogTemp, Log, TEXT("ApiVersion: %d"), static_cast<uint8>(AvatarData->ApiVersion));
+        UE_LOG(LogTemp, Log, TEXT("AvatarClass: %s"), *AvatarData->AvatarClass->GetName());
+        if (AvatarData->ThumbnailImage)
+        {
+          UE_LOG(LogTemp, Log, TEXT("ThumbnailImage: %s"), *AvatarData->ThumbnailImage->GetName());
+        }
+        else
+        {
+          UE_LOG(LogTemp, Log, TEXT("ThumbnailImage: None"));
+        }
+      }
     }
   }
+  GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("message"));
 }
 
 void AAvatarsPlayerController::SetupWidgets()
@@ -188,7 +207,7 @@ void AAvatarsPlayerController::SetupApi_v1()
         //   }
         // }
 
-        WeakController->OnAvatarsDataReceived();
+        // WeakController->OnAvatarsDataReceived();
       })
       ->Run();
 }
@@ -216,32 +235,14 @@ void AAvatarsPlayerController::SetupApi_v2()
           return;
         if (ULog::ErrorIf(Data.Avatars.Num() == 0, "No avatars data received from Api_v2")) return;
 
-        // FAvatarData* WojtekTheBear =
-        //     WeakController->Avatars.FindByPredicate([](const FAvatarData& Avatar) { return Avatar.Name.Contains("Wojtek"); });
-
-        // if (ULog::ErrorIf(WojtekTheBear == nullptr, "Could not find Wojtek in avatars data table data.")) return;
-
-        // WojtekTheBear->Id.v2 = Data.Avatars[1].AvatarId;
-        // WojtekTheBear->Name = Data.Avatars[1].AvatarName.ToString();
-        // WojtekTheBear->AssetsPath = "/Game/Avatars/Characters/WojtekTheBear/";
-        // WojtekTheBear->AvatarTag = EAvatarCharacter::WojtekTheBear;
-        // WojtekTheBear->Id.AvatarTag = EAvatarCharacter::WojtekTheBear;
-
         for (const FAvatar_v2 RemoteAvatar : Data.Avatars)
         {
           for (FAvatarData& LocalData : WeakController->Avatars)
           {
-            if (LocalData.ApiVersion == EApiVersion::API_v2 && LocalData.MatchByName(RemoteAvatar.AvatarName.ToString()))
+            if (LocalData.ApiVersion == EApiVersion::API_v2 && LocalData.MatchByName(RemoteAvatar.AvatarName))
             {
               LocalData.Id.v2 = RemoteAvatar.AvatarId;
-              LocalData.Name = RemoteAvatar.AvatarName.ToString();
-              LocalData.Id.AvatarTag = RemoteAvatar.Tag;
-              // // ! directory could be set in data table
-              // FString Directory = bIsZumbach ? "JanZumbach" : "JanKowalewski";
-              // LocalData.AssetsPath = "/Game/Avatars/Characters/" + Directory + "/";
-              // const EAvatarCharacter Tag = bIsZumbach ? EAvatarCharacter::JanZumbach : EAvatarCharacter::JanKowalewski;
-              // LocalData.AvatarTag = Tag;
-              // LocalData.Id.AvatarTag = Tag;
+              LocalData.Name = RemoteAvatar.AvatarName;
             }
           }
         }
@@ -729,13 +730,15 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
     }
   }
 
+  SelectedAvatar->ApiVersion = AvatarData.ApiVersion;
   SelectedAvatar->Id = AvatarData.Id;
-  const bool bIsApi_v2 = AvatarData.Name.Contains("Wojtek");
-  SelectedAvatar->ApiVersion = bIsApi_v2 ? EApiVersion::API_v2 : EApiVersion::API_v1;
   if (bDebug)
   {
     GEngine->AddOnScreenDebugMessage(
-        -1, 10.f, FColor::Yellow, *("Selected avatar: " + AvatarData.Name + ", API version: " + (bIsApi_v2 ? "API v2" : "API v1"))
+        -1,
+        10.f,
+        FColor::Yellow,
+        *("Selected avatar: " + AvatarData.Name + ", API version: " + (AvatarData.ApiVersion == EApiVersion::API_v2 ? "API v2" : "API v1"))
     );
   }
 
