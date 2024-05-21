@@ -692,16 +692,6 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
     }
   }
 
-  AAvatarPawn* PreviousAvatar = GetSelectedAvatar();
-  if (PreviousAvatar != nullptr)
-  {
-    PreviousAvatar->AudioComponent->OnAudioFinished.RemoveDynamic(this, &AAvatarsPlayerController::OnDialogStopped);
-    PreviousAvatar->OnAvatarStateChangeEvent.RemoveDynamic(this, &AAvatarsPlayerController::OnAvatarStateChanged);
-    PreviousAvatar->StopDialog();
-    PreviousAvatar->StopAudioStream();
-    UnPossess();
-  }
-
   AAvatarPawn* SelectedAvatar = nullptr;
 
   TArray<AActor*> SpawnedAvatars;
@@ -717,6 +707,23 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
         break;
       }
     }
+  }
+
+  // if (SelectedAvatar != nullptr && SelectedAvatar->Id == AvatarId)
+  // {
+
+  //   ULog::Warn(TEXT("Selected avatar: " + AvatarData.Name + " found on the map, using existing actor."));
+  //   return;
+  // }
+
+  AAvatarPawn* PreviousAvatar = GetSelectedAvatar();
+  if (PreviousAvatar != nullptr)
+  {
+    PreviousAvatar->AudioComponent->OnAudioFinished.RemoveDynamic(this, &AAvatarsPlayerController::OnDialogStopped);
+    PreviousAvatar->OnAvatarStateChangeEvent.RemoveDynamic(this, &AAvatarsPlayerController::OnAvatarStateChanged);
+    PreviousAvatar->StopDialog();
+    PreviousAvatar->StopAudioStream();
+    UnPossess();
   }
 
   if (SelectedAvatar == nullptr)
