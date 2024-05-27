@@ -87,10 +87,15 @@ void URootWidget::SetupDebugHelpers()
 
 void URootWidget::ShowSuggestionsText()
 {
-  if (Suggestions != nullptr)
+  if (SuggestionsText == nullptr)
   {
-    Suggestions->SetVisibility(ESlateVisibility::Visible);
+    checkNoEntry();
+    ULog::Error("SuggestionsText == nullptr.");
+    return;
   }
+
+  HideUserMessage();
+  Suggestions->SetVisibility(ESlateVisibility::Visible);
 }
 
 void URootWidget::HideSuggestionsText()
@@ -111,7 +116,6 @@ void URootWidget::SetSuggestionsText(const TArray<FString>& NewSuggestions)
       FormattedSuggestions.Add(TEXT("• ") + Suggestion);
     }
     SuggestionsText->SetText(FText::FromString(FString::Join(FormattedSuggestions, TEXT("\n"))));
-    SuggestionsText->SetVisibility(ESlateVisibility::Visible);
   }
 }
 
@@ -307,7 +311,7 @@ void URootWidget::ShowPressToTalkMessage()
   StatusMessge->SetText(GetTranslation("PressToTalkMessage"));
 }
 
-void URootWidget::HideUserMessage(const float Delay = 0.0)
+void URootWidget::HideUserMessage(const float Delay)
 {
   if (Delay != 0.0)
   {

@@ -169,7 +169,7 @@ public:
   void ShowPressToTalkMessage();
 
   UFUNCTION(BlueprintCallable)
-  void HideUserMessage(const float Delay);
+  void HideUserMessage(const float Delay = 0.0f);
 
   UFUNCTION(BlueprintCallable)
   void SelectThumbnailById(const FAvatarId& Id);
