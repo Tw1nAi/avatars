@@ -230,6 +230,9 @@ public:
   UFUNCTION(BlueprintCallable, Blueprintpure)
   FAvatarData& GetSelectedAvatarData();
 
+  UFUNCTION(BlueprintCallable)
+  void SetAvatarState(EAvatarState State);
+
   UFUNCTION(BlueprintCallable, Blueprintpure)
   bool GetActiveAvatarState(EAvatarState& OutState);
 

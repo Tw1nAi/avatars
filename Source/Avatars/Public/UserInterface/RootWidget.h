@@ -85,19 +85,10 @@ public:
   void SetSuggestionsText(const TArray<FString>& NewSuggestions);
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UButton* StartConversationButton;
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   ULoadingScreenWidget* LoadingScreen2;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UOverlay* CharacterSelection;
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UButton* BackToCharacterSelectionButton;
-
-  UFUNCTION()
-  void OnBackToCharacterSelection();
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   ULanguageSwitcherWidget* LanguageSwitcher;
@@ -105,8 +96,17 @@ public:
   UFUNCTION()
   void OnLanguageSwitch(EAvatarLanguage Language);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void OnLanguageSwitchEvent(EAvatarLanguage Language);
+
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UTextBlock* StatusMessge;
+
+  UFUNCTION(BlueprintCallable)
+  void SetStateMessage(EAvatarState State);
+
+  UFUNCTION(BlueprintCallable)
+  void HideStatusMessage();
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UCharacterThumbnailWidget* JanZumbachThumbnail2;

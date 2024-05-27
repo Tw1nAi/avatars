@@ -655,7 +655,7 @@ void AAvatarsPlayerController::DisplayAvatarMessage_v2(FMessage_v2 Message, cons
   FString AvatarAssetsPath = GetSelectedAvatarData().AssetsPath;
   Avatar->PlayDialog(AvatarAssetsPath, Message.AudioPath, GetLanguageAsLocalString());
 
-  RootWidget->ShowPressToTalkMessage();
+  RootWidget->HideStatusMessage();
 }
 
 void AAvatarsPlayerController::OnDialogStopped()
@@ -1008,6 +1008,18 @@ FAvatarData& AAvatarsPlayerController::GetSelectedAvatarData()
 
   checkNoEntry();
   return Avatars[0];
+}
+
+void AAvatarsPlayerController::SetAvatarState(EAvatarState State)
+{
+  AAvatarPawn* Avatar = GetSelectedAvatar();
+  if (!Avatar) return;
+
+  Avatar->SetState(State);
+
+  if (RootWidget == nullptr) return;
+
+  RootWidget->SetStateMessage(State);
 }
 
 const FAvatarData& AAvatarsPlayerController::GetDefaultAvatarData() const

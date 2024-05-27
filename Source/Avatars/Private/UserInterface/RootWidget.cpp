@@ -13,14 +13,6 @@ void URootWidget::NativeConstruct()
 {
   Super::NativeConstruct();
 
-  if (StartConversationButton != nullptr)
-  {
-    StartConversationButton->OnClicked.AddDynamic(this, &URootWidget::StartNewConversation);
-  };
-  if (BackToCharacterSelectionButton != nullptr)
-  {
-    BackToCharacterSelectionButton->OnClicked.AddDynamic(this, &URootWidget::OnBackToCharacterSelection);
-  }
   if (SendTextButton != nullptr)
   {
     SendTextButton->OnClicked.AddDynamic(this, &URootWidget::OnSendTextButtonClick);
@@ -32,7 +24,6 @@ void URootWidget::NativeConstruct()
   }
 
   WidgetsHiddenByDefault.Add(StatusMessge);
-  WidgetsHiddenByDefault.Add(BackToCharacterSelectionButton);
   WidgetsHiddenByDefault.Add(UserTextInputBox);
   WidgetsHiddenByDefault.Add(OptionsMenu);
 
@@ -119,22 +110,6 @@ void URootWidget::SetSuggestionsText(const TArray<FString>& NewSuggestions)
   }
 }
 
-void URootWidget::OnBackToCharacterSelection()
-{
-  if (GetController())
-  {
-    PlayerController->StopDialog();
-  }
-
-  UserTextInputBox->SetVisibility(ESlateVisibility::Collapsed);
-  BackToCharacterSelectionButton->SetVisibility(ESlateVisibility::Collapsed);
-  StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
-  UserMessage->SetVisibility(ESlateVisibility::Collapsed);
-
-  StartConversationButton->SetVisibility(ESlateVisibility::Visible);
-  CharacterSelection->SetVisibility(ESlateVisibility::Visible);
-}
-
 void URootWidget::OnSendTextButtonClick()
 {
   if (!GetController())
@@ -190,10 +165,17 @@ void URootWidget::HideUserTextBox()
 
 void URootWidget::ShowUserTextBox()
 {
-  UserTextInputBox->SetVisibility(ESlateVisibility::Visible);
+  if (GetController())
+  {
+    PlayerController->StopDialog();
+    PlayerController->SetAvatarState(EAvatarState::Listening);
+  }
+
   StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
   UserMessage->SetVisibility(ESlateVisibility::Collapsed);
+  HideSuggestionsText();
 
+  UserTextInputBox->SetVisibility(ESlateVisibility::Visible);
   UserTextBox->SetKeyboardFocus();
 }
 
@@ -215,9 +197,6 @@ void URootWidget::StartNewConversation()
   {
     PlayerController->StartNewConversation(true);
   }
-  StartConversationButton->SetVisibility(ESlateVisibility::Collapsed);
-  // CharacterSelection->SetVisibility(ESlateVisibility::Collapsed);
-  // BackToCharacterSelectionButton->SetVisibility(ESlateVisibility::Visible);
 }
 
 void URootWidget::ShowLoadingScreen()
@@ -235,6 +214,7 @@ void URootWidget::OnLanguageSwitch(EAvatarLanguage Language)
   StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
   UserMessage->SetVisibility(ESlateVisibility::Collapsed);
   SetLanguage(Language);
+  OnLanguageSwitchEvent(Language);
 }
 
 EAvatarLanguage URootWidget::GetAvatarLanguage()
@@ -295,8 +275,8 @@ void URootWidget::ShowRecordingInProgressMessage()
     return;
   }
 
-  StatusMessge->SetVisibility(ESlateVisibility::Visible);
   StatusMessge->SetText(GetTranslation("RecordingInProgressMessage"));
+  StatusMessge->SetVisibility(ESlateVisibility::Visible);
 }
 
 void URootWidget::ShowPressToTalkMessage()
@@ -307,8 +287,40 @@ void URootWidget::ShowPressToTalkMessage()
     return;
   }
 
-  StatusMessge->SetVisibility(ESlateVisibility::Visible);
   StatusMessge->SetText(GetTranslation("PressToTalkMessage"));
+  StatusMessge->SetVisibility(ESlateVisibility::Visible);
+}
+
+void URootWidget::SetStateMessage(EAvatarState State)
+{
+  if (StatusMessge == nullptr)
+  {
+    ULog::Error("StatusMessage == nullptr.");
+    return;
+  }
+
+  // clang-format off
+  switch (State)
+  {
+    case EAvatarState::Idle:      StatusMessge->SetText(GetTranslation("StateIdleMessage")); break;
+    case EAvatarState::Listening: StatusMessge->SetText(GetTranslation("StateListeningMessage")); break;
+    case EAvatarState::Thinking:  StatusMessge->SetText(GetTranslation("StateThinkingMessage")); break;
+    case EAvatarState::Talking:   StatusMessge->SetText(GetTranslation("StateTalkingMessage")); break;
+    default: break;
+  }
+  // clang-format on
+
+  StatusMessge->SetVisibility(ESlateVisibility::Visible);
+}
+
+void URootWidget::HideStatusMessage()
+{
+  if (StatusMessge == nullptr)
+  {
+    ULog::Error("StatusMessage == nullptr.");
+    return;
+  }
+  StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void URootWidget::HideUserMessage(const float Delay)

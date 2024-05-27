@@ -337,7 +337,6 @@ void AAvatarPawn::StopDialog()
   };
 
   FaceAnimBP->StopFaceAnimation();
-  SetState(EAvatarState::Idle);
 }
 
 void AAvatarPawn::ApplySceneSetup()
