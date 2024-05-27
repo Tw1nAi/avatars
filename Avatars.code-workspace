@@ -128,7 +128,8 @@
       "xutility": "cpp",
       "alignedvector3": "cpp",
       "adolcforward": "cpp"
-    }
+    },
+    "powershell.cwd": "Avatars"
 	},
 	"extensions": {
 		"recommendations": [
