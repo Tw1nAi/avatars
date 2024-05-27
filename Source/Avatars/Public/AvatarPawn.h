@@ -169,7 +169,7 @@ public:
   void SetState(EAvatarState NewState);
 
   UFUNCTION(BlueprintCallable)
-  USoundWave* GetDialogSoundWave(const FString Path, const FString AssetName, FString LanguageString);
+  bool GetDialogSoundWave(const FString Path, const FString AssetName, FString LanguageString, USoundWave*& OutDialogSound);
 
   UPROPERTY()
   USoundWave* LastDialogSoundWave;
@@ -179,7 +179,7 @@ public:
   void PlayDialogSoundWave(USoundWave* DialogSound);
 
   UFUNCTION(BlueprintCallable)
-  UAnimSequence* GetDialogFaceAnimation(const FString Path, const FString AssetName, FString LanguageString);
+  bool GetDialogFaceAnimation(const FString Path, const FString AssetName, FString LanguageString, UAnimSequence*& OutFaceAnimation);
 
   UPROPERTY()
   UAnimSequence* LastFaceAnimation;

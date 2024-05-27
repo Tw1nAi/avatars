@@ -211,13 +211,14 @@ void AAvatarPawn::SetState(EAvatarState NewState)
   BodyAnimBP->SetAvatarState(NewState);
 }
 
-USoundWave* AAvatarPawn::GetDialogSoundWave(const FString Path, const FString AssetName, FString LanguageString)
+bool AAvatarPawn::GetDialogSoundWave(const FString Path, const FString AssetName, FString LanguageString, USoundWave*& OutDialogSound)
 {
   const FString AudioPath = Path + "Dialogs/" + LanguageString + "/Audio/";
 
   if (LastDialogPath == (AudioPath + AssetName) && LastDialogSoundWave != nullptr)
   {
-    return LastDialogSoundWave;
+    OutDialogSound = LastDialogSoundWave;
+    return true;
   }
 
   LastDialogSoundWave = FGet::GetAssetByPath<USoundWave>(AudioPath, AssetName);
@@ -227,10 +228,11 @@ USoundWave* AAvatarPawn::GetDialogSoundWave(const FString Path, const FString As
     if (bDebug)
       ULog::Error("Could not get reference to USoundWave: " + AssetName + " for path: " + AudioPath + "in object: " + this->GetName());
 
-    return nullptr;
+    return false;
   }
 
-  return LastDialogSoundWave;
+  OutDialogSound = LastDialogSoundWave;
+  return true;
 }
 
 void AAvatarPawn::PlayDialogSoundWave(USoundWave* DialogSound)
@@ -265,14 +267,17 @@ void AAvatarPawn::OnAudioFinishedPlaying()
   if (IsInState(EAvatarState::Talking)) SetState(EAvatarState::Idle);
 }
 
-UAnimSequence* AAvatarPawn::GetDialogFaceAnimation(const FString Path, const FString AssetName, FString LanguageString)
+bool AAvatarPawn::GetDialogFaceAnimation(
+    const FString Path, const FString AssetName, FString LanguageString, UAnimSequence*& OutFaceAnimation
+)
 {
   const FString AnimationPath = Path + "Dialogs/" + LanguageString + "/Animations/";
   const FString FullName = TEXT("animFace_") + AssetName;
 
   if (LastFaceAnimationPath == (AnimationPath + FullName) && LastFaceAnimation != nullptr)
   {
-    return LastFaceAnimation;
+    OutFaceAnimation = LastFaceAnimation;
+    return true;
   }
 
   LastFaceAnimation = FGet::GetAssetByPath<UAnimSequence>(AnimationPath, FullName);
@@ -283,12 +288,13 @@ UAnimSequence* AAvatarPawn::GetDialogFaceAnimation(const FString Path, const FSt
       ULog::Error(
           "Could not get reference to UAnimSequence: " + FullName + " for path: " + AnimationPath + "in object: " + this->GetName()
       );
-    return nullptr;
+    return false;
   }
 
   LastFaceAnimationPath = AnimationPath + FullName;
 
-  return LastFaceAnimation;
+  OutFaceAnimation = LastFaceAnimation;
+  return true;
 }
 
 void AAvatarPawn::PlayDialogFaceAnimation(UAnimSequence* FaceAnimation)
@@ -306,15 +312,17 @@ void AAvatarPawn::PlayDialogFaceAnimation(UAnimSequence* FaceAnimation)
 
 void AAvatarPawn::PlayDialog(const FString Path, const FString AssetName, FString LanguageString)
 {
-  UAnimSequence* Animation = GetDialogFaceAnimation(Path, AssetName, LanguageString);
-  USoundWave* SoundWave = GetDialogSoundWave(Path, AssetName, LanguageString);
+  UAnimSequence* Animation = nullptr;
+  GetDialogFaceAnimation(Path, AssetName, "Common", Animation) || GetDialogFaceAnimation(Path, AssetName, LanguageString, Animation);
 
-  if (SoundWave != nullptr && Animation != nullptr)
-  {
-    PlayDialogFaceAnimation(Animation);
-    PlayDialogSoundWave(SoundWave);
-    SetState(EAvatarState::Talking);
-  }
+  USoundWave* SoundWave = nullptr;
+  GetDialogSoundWave(Path, AssetName, "Common", SoundWave) || GetDialogSoundWave(Path, AssetName, LanguageString, SoundWave);
+
+  if (!SoundWave || !Animation) return;
+
+  PlayDialogFaceAnimation(Animation);
+  PlayDialogSoundWave(SoundWave);
+  SetState(EAvatarState::Talking);
 }
 
 void AAvatarPawn::StopDialog()
