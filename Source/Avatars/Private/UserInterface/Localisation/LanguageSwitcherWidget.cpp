@@ -30,12 +30,16 @@ void ULanguageSwitcherWidget::SynchronizeProperties()
     Button->OnLanguageSwitchEvent.AddDynamic(this, &ULanguageSwitcherWidget::OnLanguageButtonPressed);
     LanguageButtons.Add(Button);
     ButtonsBox->AddChild(Button);
+
+    AAvatarsPlayerController* PlayerController = Cast<AAvatarsPlayerController>(GetOwningPlayer());
+    if (PlayerController != nullptr) Button->SetSelected(Button->IsLanguage(PlayerController->Language));
   }
 }
 
 void ULanguageSwitcherWidget::OnLanguageButtonPressed(EAvatarLanguage Language)
 {
   if (OnLanguageSwitchEvent.IsBound()) OnLanguageSwitchEvent.Broadcast(Language);
+
   for (ULanguageButtonWidget* Button : LanguageButtons)
   {
     Button->SetSelected(Button->IsLanguage(Language));
