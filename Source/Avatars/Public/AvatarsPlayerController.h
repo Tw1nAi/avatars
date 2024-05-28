@@ -83,7 +83,7 @@ public:
 
   /* When checked every user message will displayed along with recorded audio and transcription. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|User Interface")
-  bool bDisplayUserMessage = true;
+  bool bShowUserMessage = true;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|User Interface")
   float HideUserMessageDelay = 2.0;

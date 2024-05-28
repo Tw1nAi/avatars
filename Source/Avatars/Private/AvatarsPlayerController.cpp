@@ -315,9 +315,9 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
       }
     }
 
-    if (WeakController->bDisplayUserMessage && WeakController->RootWidget != nullptr)
+    if (WeakController->bShowUserMessage && WeakController->RootWidget != nullptr)
     {
-      WeakController->RootWidget->DisplayUserMessage(Message);
+      WeakController->RootWidget->ShowUserMessage(Message);
     }
   });
 
@@ -612,11 +612,11 @@ void AAvatarsPlayerController::DisplayAvatarMessage(FAvatarMessage Message)
 
   if (bShowAvatarMessage)
   {
-    RootWidget->DisplayUserMessage(Message.Text);
+    RootWidget->ShowAvatarMessage(Message.Text);
   }
   else
   {
-    RootWidget->HideUserMessage(HideUserMessageDelay);
+    RootWidget->HideAvatarMessage(HideUserMessageDelay);
   }
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
@@ -638,11 +638,11 @@ void AAvatarsPlayerController::DisplayAvatarMessage_v2(FMessage_v2 Message, cons
 
   if (bShowAvatarMessage)
   {
-    RootWidget->DisplayUserMessage(Message.Text);
+    RootWidget->ShowAvatarMessage(Message.Text);
   }
   else
   {
-    RootWidget->HideUserMessage(HideUserMessageDelay);
+    RootWidget->HideAvatarMessage(HideUserMessageDelay);
   }
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
@@ -775,8 +775,7 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
 
   if (RootWidget != nullptr)
   {
-    RootWidget->SelectThumbnailById(SelectedAvatar->Id);
-    RootWidget->UpdateThumbnailsDisplay();
+    RootWidget->SelectThumbnail(SelectedAvatar->Id);
   }
 
   ChangeAvatarTimeout.ClearIfValid(GetWorld());
@@ -972,20 +971,11 @@ void AAvatarsPlayerController::OnAvatarStateChanged(EAvatarState OldState, EAvat
   if (NewState == EAvatarState::Thinking)
   {
     StartThinkingTimeout();
-
-    if (RootWidget != nullptr)
-    {
-      RootWidget->StatusMessge->SetText(RootWidget->GetTranslation("ThinkingStatusMessage"));
-    }
   }
 
-  if (NewState == EAvatarState::Idle)
-  {
-    if (RootWidget != nullptr)
-    {
-      RootWidget->StatusMessge->SetText(RootWidget->GetTranslation("PressToTalkMessage"));
-    }
-  }
+  if (RootWidget == nullptr) return;
+
+  RootWidget->SetStateMessage(NewState);
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
   if (!Avatar) return;

@@ -23,11 +23,14 @@ void URootWidget::NativeConstruct()
     LanguageSwitcher->OnLanguageSwitchEvent.AddDynamic(this, &URootWidget::OnLanguageSwitch);
   }
 
-  WidgetsHiddenByDefault.Add(StatusMessge);
-  WidgetsHiddenByDefault.Add(UserTextInputBox);
-  WidgetsHiddenByDefault.Add(OptionsMenu);
+  HiddenWidgets.Add(StatusMessge);
+  HiddenWidgets.Add(UserTextInputBox);
+  HiddenWidgets.Add(OptionsMenu);
+  HiddenWidgets.Add(UserMessage);
+  HiddenWidgets.Add(AvatarMessage);
+  HiddenWidgets.Add(Suggestions);
 
-  for (UWidget* Widget : WidgetsHiddenByDefault)
+  for (UWidget* Widget : HiddenWidgets)
   {
     if (Widget != nullptr) Widget->SetVisibility(ESlateVisibility::Collapsed);
   }
@@ -35,8 +38,6 @@ void URootWidget::NativeConstruct()
   AvatarsThumbnails.Add(JanZumbachThumbnail2);
   AvatarsThumbnails.Add(JakKowalewskiThumbnail2);
   AvatarsThumbnails.Add(WojtekTheBearThumbnail);
-
-  HideSuggestionsText();
 }
 
 void URootWidget::SynchronizeProperties()
@@ -86,6 +87,7 @@ void URootWidget::ShowSuggestionsText()
   }
 
   HideUserMessage();
+  HideAvatarMessage();
   Suggestions->SetVisibility(ESlateVisibility::Visible);
 }
 
@@ -179,7 +181,7 @@ void URootWidget::ShowUserTextBox()
   UserTextBox->SetKeyboardFocus();
 }
 
-void URootWidget::DisplayUserMessage(FString Message)
+void URootWidget::ShowUserMessage(FString Message)
 {
   verify(UserMessage != nullptr);
 
@@ -340,32 +342,49 @@ void URootWidget::HideUserMessage(const float Delay)
   UserMessage->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void URootWidget::SelectThumbnailById(const FAvatarId& Id)
+void URootWidget::ShowAvatarMessage(FString Message)
 {
-  for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
+  if (AvatarMessage == nullptr)
   {
-    Thumb->bIsSelected = Thumb->AvatarId == Id;
+    ULog::Error("AvatarMessage == nullptr.");
+    return;
   }
+  AvatarMessage->SetText(FText::FromString(Message));
+  AvatarMessage->SetVisibility(ESlateVisibility::Visible);
 }
 
-void URootWidget::UpdateThumbnailsDisplay()
+void URootWidget::HideAvatarMessage(const float Delay)
+{
+  if (Delay != 0.0)
+  {
+    FTimerHandle Handle;
+    GetWorld()->GetTimerManager().SetTimer(Handle, FTimerDelegate::CreateLambda([&] { this->HideAvatarMessage(0.0); }), 1.0f, false);
+    return;
+  }
+
+  if (AvatarMessage == nullptr)
+  {
+    ULog::Error("AvatarMessage == nullptr.");
+    return;
+  }
+  AvatarMessage->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void URootWidget::SelectThumbnail(const FAvatarId& Id)
 {
   for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
   {
-    // Thumb->SetVisibility(Thumb->bIsSelected ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
-    Thumb->UpdateSelection(Thumb->bIsSelected);
+    Thumb->UpdateSelectionNative(Thumb->AvatarId == Id);
   }
 }
 
 void URootWidget::OnCharacterThumbnailClick(const FAvatarId& Id)
 {
-  SelectThumbnailById(Id);
-  UpdateThumbnailsDisplay();
+  SelectThumbnail(Id);
 
   if (OnCharacterThumbnailClickEvent.IsBound())
   {
     OnCharacterThumbnailClickEvent.Broadcast(Id);
-    HideSuggestionsText();
   }
 }
 
@@ -383,7 +402,7 @@ void URootWidget::CreateAvatarsThumbnails(TArray<FAvatarData> AvatarsData)
         ThumbWidget->CharacterName = Avatar.Name;
         ThumbWidget->UpdateImage(Avatar.ThumbnailImage);
         ThumbWidget->OnClickEvent.AddUObject(this, &URootWidget::OnCharacterThumbnailClick);
-        ThumbWidget->Update();
+        ThumbWidget->UpdateSelectionNative(ThumbWidget->AvatarId == Avatar.Id);
       }
     }
   }

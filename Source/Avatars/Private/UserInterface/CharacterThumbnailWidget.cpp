@@ -27,9 +27,10 @@ void UCharacterThumbnailWidget::UpdateSize(float Size)
   ThumbnailSize = Size;
 }
 
-void UCharacterThumbnailWidget::UpdateSelection(const bool bInIsSelected)
+void UCharacterThumbnailWidget::UpdateSelectionNative(const bool bInIsSelected)
 {
-  BorderSelected->SetVisibility(bInIsSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+  bIsSelected = bInIsSelected;
+  UpdateSelection(bInIsSelected);
 }
 
 void UCharacterThumbnailWidget::Update()
@@ -52,7 +53,7 @@ void UCharacterThumbnailWidget::NativeOnMouseLeave(const FPointerEvent& InMouseE
 
 FReply UCharacterThumbnailWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-  // UpdateSelection(true);
+  // UpdateSelectionNative(true);
 
   if (OnClickEvent.IsBound())
   {

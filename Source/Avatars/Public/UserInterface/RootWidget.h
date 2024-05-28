@@ -58,7 +58,7 @@ public:
 
   /* Add to this list widgets that should be hidden when the app starts by default. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<UWidget*> WidgetsHiddenByDefault;
+  TArray<UWidget*> HiddenWidgets;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UCanvasPanel* CanvasPanel;
@@ -68,6 +68,21 @@ public:
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UTextBlock* UserMessage;
+
+  UFUNCTION(BlueprintCallable)
+  void ShowUserMessage(FString Message);
+
+  UFUNCTION(BlueprintCallable)
+  void HideUserMessage(const float Delay = 0.0f);
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
+  UTextBlock* AvatarMessage;
+
+  UFUNCTION(BlueprintCallable)
+  void ShowAvatarMessage(FString Message);
+
+  UFUNCTION(BlueprintCallable)
+  void HideAvatarMessage(const float Delay = 0.0f);
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UVerticalBox* Suggestions;
@@ -151,9 +166,6 @@ public:
   TArray<UCharacterThumbnailWidget*> AvatarsThumbnails;
 
   UFUNCTION(BlueprintCallable)
-  void DisplayUserMessage(FString Message);
-
-  UFUNCTION(BlueprintCallable)
   void StartNewConversation();
 
   UFUNCTION(BlueprintCallable)
@@ -169,13 +181,7 @@ public:
   void ShowPressToTalkMessage();
 
   UFUNCTION(BlueprintCallable)
-  void HideUserMessage(const float Delay = 0.0f);
-
-  UFUNCTION(BlueprintCallable)
-  void SelectThumbnailById(const FAvatarId& Id);
-
-  UFUNCTION(BlueprintCallable)
-  void UpdateThumbnailsDisplay();
+  void SelectThumbnail(const FAvatarId& Id);
 
   UFUNCTION(BlueprintCallable)
   void OnCharacterThumbnailClick(const FAvatarId& Id);

@@ -48,9 +48,6 @@ public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UImage* HoverOverlay;
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UBorder* BorderSelected;
-
   UPROPERTY(Transient, meta = (BindWidgetAnim))
   UWidgetAnimation* MouseEnterAnimation;
 
@@ -61,6 +58,9 @@ public:
   void UpdateImage(UObject* InImage);
 
   UFUNCTION(BlueprintCallable)
+  void UpdateSelectionNative(const bool bInIsSelected);
+
+  UFUNCTION(BlueprintImplementableEvent)
   void UpdateSelection(const bool bInIsSelected);
 
   UFUNCTION(BlueprintCallable)
