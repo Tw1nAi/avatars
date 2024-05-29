@@ -1,0 +1,45 @@
+FROM nvidia/cuda:11.2.2-cudnn8-runtime-ubuntu20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Remove any third-party apt sources to avoid issues with expiring keys.
+RUN rm -f /etc/apt/sources.list.d/*.list
+
+# Install some basic utilities.
+RUN apt-get update && apt-get install -y \
+    curl --fix-missing \
+    ca-certificates --fix-missing \
+    sudo --fix-missing \
+    git --fix-missing \
+    bzip2 --fix-missing \
+    libx11-6 --fix-missing \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN apt update
+
+# install python
+RUN apt install software-properties-common -y && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt update
+
+RUN apt install python3-dev -y && \
+    apt install python-is-python3
+
+
+# install pip
+RUN apt install python3-pip -y
+RUN apt update --fix-missing
+
+# Create a working directory.
+RUN mkdir /app
+WORKDIR /app
+
+COPY setup.sh /app
+RUN bash setup.sh
+
+COPY requirements.txt /app
+RUN pip install -r requirements.txt
+
+COPY server.py /app
+COPY transcriber.py /app
+CMD ["python", "server.py"]
