@@ -2,8 +2,12 @@
 
 #include "UserInterface/RootWidget.h"
 
-#include "AvatarsPlayerController.h"
 #include "Components/GridSlot.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "Slate/SceneViewport.h"
+
+#include "AvatarsPlayerController.h"
 #include "Get.h"
 #include "Log.h"
 #include "Translations.h"
@@ -38,6 +42,32 @@ void URootWidget::NativeConstruct()
   AvatarsThumbnails.Add(JanZumbachThumbnail2);
   AvatarsThumbnails.Add(JakKowalewskiThumbnail2);
   AvatarsThumbnails.Add(WojtekTheBearThumbnail);
+
+  if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+  {
+    // Bind to the viewport resize event
+    ViewportResizedHandle = GEngine->GameViewport->Viewport->ViewportResizedEvent.AddUObject(this, &URootWidget::OnViewportResized);
+
+    // Initialize the last viewport size
+    FViewport* Viewport = GEngine->GameViewport->Viewport;
+    if (Viewport)
+    {
+      LastViewportSize = FVector2D(Viewport->GetSizeXY());
+      FString Message = FString::Printf(TEXT("Viewport size initialized to: %s"), *LastViewportSize.ToString());
+      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
+      UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+    }
+  }
+}
+
+void URootWidget::NativeDestruct()
+{
+  if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+  {
+    GEngine->GameViewport->Viewport->ViewportResizedEvent.Remove(ViewportResizedHandle);
+  }
+
+  Super::NativeDestruct();
 }
 
 void URootWidget::SynchronizeProperties()
@@ -112,6 +142,7 @@ void URootWidget::SetSuggestionsText(const TArray<FString>& NewSuggestions)
   }
 }
 
+// ! this should be moved to PlayerController/GameInstance
 void URootWidget::OnSendTextButtonClick()
 {
   if (!GetController())
@@ -181,15 +212,19 @@ void URootWidget::ShowUserTextBox()
   UserTextBox->SetKeyboardFocus();
 }
 
-void URootWidget::ShowUserMessage(FString Message)
+void URootWidget::ShowUserMessage(FString Message, const float HideDelay)
 {
   verify(UserMessage != nullptr);
+  if (UserMessage == nullptr) return;
 
-  if (UserMessage != nullptr)
+  Message.TrimStartAndEndInline();
+  UserMessage->SetText(FText::FromString(Message.Left(1).ToUpper() + Message.RightChop(1)));
+  UserMessage->SetVisibility(ESlateVisibility::Visible);
+
+  if (HideDelay > 0.0f)
   {
-    Message.TrimStartAndEndInline();
-    UserMessage->SetText(FText::FromString(Message.Left(1).ToUpper() + Message.RightChop(1)));
-    UserMessage->SetVisibility(ESlateVisibility::Visible);
+    FTimerHandle Handle;
+    GetWorld()->GetTimerManager().SetTimer(Handle, FTimerDelegate::CreateLambda([&] { this->HideUserMessage(0.0); }), HideDelay, false);
   }
 }
 
@@ -327,7 +362,7 @@ void URootWidget::HideStatusMessage()
 
 void URootWidget::HideUserMessage(const float Delay)
 {
-  if (Delay != 0.0)
+  if (Delay != 0.0f)
   {
     FTimerHandle Handle;
     GetWorld()->GetTimerManager().SetTimer(Handle, FTimerDelegate::CreateLambda([&] { this->HideUserMessage(0.0); }), 1.0f, false);
@@ -419,4 +454,22 @@ FReply URootWidget::NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FK
 
   // Sending unhandled allows to keep using "Enter" to open the text box.
   return FReply::Unhandled();
+}
+
+void URootWidget::OnViewportResized(FViewport* Viewport, uint32 Index)
+{
+  if (!Viewport)
+  {
+    return;
+  }
+
+  FVector2D CurrentViewportSize = FVector2D(Viewport->GetSizeXY());
+
+  if (!LastViewportSize.Equals(CurrentViewportSize))
+  {
+    LastViewportSize = CurrentViewportSize;
+    FString Message = FString::Printf(TEXT("Viewport size changed to: %s"), *CurrentViewportSize.ToString());
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
+    UE_LOG(LogTemp, Log, TEXT("%s"), *Message);
+  }
 }

@@ -35,8 +35,8 @@ class Event:
 class TranscriptionService:
     def __init__(
             self,
-            language = "en",
-            multilingual = False,
+            language = "pl",
+            multilingual = True,
             transcription_task = "transcribe",
             vad_parameters = None,
             model_size = "large-v2",
@@ -291,7 +291,7 @@ class TranscriptionService:
 
                 # no point moving forward if we have no frames to process
                 if self.audio_frames_buffer is None:
-                    if self.debug and self.print_in_loop: info("[LOOP] No frames to process")
+                    # if self.debug and self.print_in_loop: info("[LOOP] No frames to process")
                     time.sleep(0.01)
                     continue
 

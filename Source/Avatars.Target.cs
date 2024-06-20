@@ -10,6 +10,7 @@ public class AvatarsTarget : TargetRules
         Type = TargetType.Game;
         DefaultBuildSettings = BuildSettingsVersion.V2;
 
+        ExtraModuleNames.Add("TextHelpers");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

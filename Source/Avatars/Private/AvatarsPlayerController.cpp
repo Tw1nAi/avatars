@@ -19,6 +19,7 @@
 #include "Get.h"
 #include "Log.h"
 #include "Persistance/PersistanceController.h"
+#include "TextHelpers.h"
 #include "UserInterface/RootWidget.h"
 
 AAvatarsPlayerController::AAvatarsPlayerController()
@@ -72,7 +73,7 @@ void AAvatarsPlayerController::BeginPlay()
   DisableInput(this);
   LoadAvatarsData();
   SetupWidgets();
-  SetupApi_v1();
+  // SetupApi_v1();
   SetupApi_v2();
 
   if (bUseLocalTranscription)
@@ -317,7 +318,7 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
 
     if (WeakController->bShowUserMessage && WeakController->RootWidget != nullptr)
     {
-      WeakController->RootWidget->ShowUserMessage(Message);
+      WeakController->RootWidget->ShowUserMessage(Message, FTextHelpers::CalculateReadingTime(Message));
     }
   });
 

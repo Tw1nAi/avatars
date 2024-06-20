@@ -7,8 +7,8 @@ from transcription_server import ServerEvent, TranscriptionServer
 from transcription_service import TranscriptEvent, TranscriptionService
 
 logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
-# logger.setLevel(logging.INFO)
+# logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 # logger.setLevel(logging.DEBUG)
 
 # ! use multiprocessing instead of threading to avoid Global Interpreter Lock (GIL)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     def end():
         server.server.shutdown()
-        server.server.server_close()
+        # server.server.server_close()
         transcription.cleanup()
         info("Quitting application...")
         quit()

@@ -12,6 +12,7 @@
 #include "Components/Overlay.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Delegates/Delegate.h"
 
 #include "AvatarPawn.h"
 #include "AvatarsTypes.h"
@@ -25,6 +26,7 @@
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterThumbnailClickDelegate, const FAvatarId&);
 
 class AAvatarsPlayerController;
+class FDelegateHandle;
 class UDataTable;
 class ULoadingScreenWidget;
 
@@ -35,6 +37,7 @@ class AVATARS_API URootWidget : public UUserWidget
 
 public:
   virtual void NativeConstruct() override;
+  virtual void NativeDestruct() override;
 
   // This is called every time that the widget is compiled,
   // or a property is changed.
@@ -70,7 +73,7 @@ public:
   UTextBlock* UserMessage;
 
   UFUNCTION(BlueprintCallable)
-  void ShowUserMessage(FString Message);
+  void ShowUserMessage(FString Message, const float HideDelay = 0.0f);
 
   UFUNCTION(BlueprintCallable)
   void HideUserMessage(const float Delay = 0.0f);
@@ -147,6 +150,7 @@ public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UButton* SendTextButton;
 
+  // ! this should be moved to PlayerController/GameInstance
   UFUNCTION(BlueprintCallable)
   void OnSendTextButtonClick();
 
@@ -201,4 +205,9 @@ public:
   FOnCharacterThumbnailClickDelegate OnCharacterThumbnailClickEvent;
 
   virtual FReply NativeOnPreviewKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+  void OnViewportResized(FViewport* Viewport, uint32 Index);
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  FVector2D LastViewportSize;
+  FDelegateHandle ViewportResizedHandle;
 };

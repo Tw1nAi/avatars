@@ -8,9 +8,10 @@ public class Avatars : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+    PublicDependencyModuleNames.Add("TextHelpers");
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HTTP", "WebSockets", "Json", "JsonUtilities", "UMG", "AssetRegistry", "SlateCore", "RuntimeAudioImporter", "AudioCaptureCore", "AudioCapture", "AudioMixer" });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });
 
         if (Target.Configuration == UnrealTargetConfiguration.Debug || Target.Configuration == UnrealTargetConfiguration.DebugGame)
         {
@@ -28,13 +29,5 @@ public class Avatars : ModuleRules
                 "Avatars/Private/Utils/Private"
             }
         );
-
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
-        // Uncomment if you are using online features
-        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
-
-        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
     }
 }

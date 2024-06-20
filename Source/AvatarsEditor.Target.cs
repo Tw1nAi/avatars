@@ -10,6 +10,7 @@ public class AvatarsEditorTarget : TargetRules
         Type = TargetType.Editor;
         DefaultBuildSettings = BuildSettingsVersion.V2;
 
+        ExtraModuleNames.Add("TextHelpers");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

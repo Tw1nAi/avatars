@@ -33,7 +33,7 @@ AAvatarPawn::AAvatarPawn()
     AudioComponent->SetupAttachment(GetRootComponent());
   }
 
-  // AudioStreamComponent = CreateOptionalDefaultSubobject<UAudioStreamComponent>(TEXT("AudioStreamComponent"));
+  AudioStreamComponent = CreateOptionalDefaultSubobject<UAudioStreamComponent>(TEXT("AudioStreamComponent"));
 
   if (bApplySceneSetup)
   {
