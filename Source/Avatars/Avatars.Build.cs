@@ -10,6 +10,7 @@ public class Avatars : ModuleRules
 
         PublicDependencyModuleNames.Add("TextHelpers");
         PublicDependencyModuleNames.Add("AiIntellect");
+        PublicDependencyModuleNames.Add("RestApi");
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HTTP", "WebSockets", "Json", "JsonUtilities", "UMG", "AssetRegistry", "SlateCore", "RuntimeAudioImporter", "AudioCaptureCore", "AudioCapture", "AudioMixer" });
 
         PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });

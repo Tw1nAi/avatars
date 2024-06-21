@@ -27,18 +27,14 @@ struct FHttpHeader
 
 // Template class for handling HTTP requests and processing their responses.
 // Allows for sending requests and chaining response handling with a fluent interface.
-template <typename InResponseType, typename InPayloadType = InResponseType>
-class AVATARS_API TRequestHandle
+template <typename InResponseType, typename InPayloadType = InResponseType> class TRequestHandle
 {
 public:
   // Shared pointer to the HTTP request, ensuring thread safety.
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request;
 
   // Executes the HTTP request without a payload.
-  void Run()
-  {
-    Request->ProcessRequest();
-  }
+  void Run() { Request->ProcessRequest(); }
 
   // Executes the HTTP request with a payload, converting the payload to a JSON string.
   void Run(const InPayloadType& RequestData)
@@ -55,27 +51,30 @@ public:
   // Binds a callback to execute when the request completes, converting the JSON response back to a struct.
   TRequestHandle<InResponseType, InPayloadType>* Then(TFunction<void(InResponseType)> OnJsonConverted)
   {
-    Request->OnProcessRequestComplete().BindLambda([OnJsonConverted](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
-      const bool bRequestSucceeded = bWasSuccessful && Response.IsValid();
+    Request->OnProcessRequestComplete().BindLambda(
+        [OnJsonConverted](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+          const bool bRequestSucceeded = bWasSuccessful && Response.IsValid();
 
-      if (!bRequestSucceeded)
-      {
-        verify(!bRequestSucceeded);
-        // TODO: Handle HTTP request failure
-        return;
-      }
+          if (!bRequestSucceeded)
+          {
+            verify(!bRequestSucceeded);
+            // TODO: Handle HTTP request failure
+            return;
+          }
 
-      InResponseType ResponseData;
-      const bool bJsonConversionSucceeded = FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &ResponseData, 0, 0);
+          InResponseType ResponseData;
+          const bool bJsonConversionSucceeded =
+              FJsonObjectConverter::JsonObjectStringToUStruct(Response->GetContentAsString(), &ResponseData, 0, 0);
 
-      if (!bJsonConversionSucceeded)
-      {
-        verify(!bJsonConversionSucceeded);
-        // TODO: Handle JSON conversion failure
-        return;
-      }
-      OnJsonConverted(ResponseData);
-    });
+          if (!bJsonConversionSucceeded)
+          {
+            verify(!bJsonConversionSucceeded);
+            // TODO: Handle JSON conversion failure
+            return;
+          }
+          OnJsonConverted(ResponseData);
+        }
+    );
 
     return this;
   }
@@ -85,7 +84,7 @@ public:
  * Base REST API class that allows to run regular REST calls.
  */
 UCLASS(Blueprintable, BlueprintType)
-class AVATARS_API URestApi : public UObject
+class RESTAPI_API URestApi : public UObject
 {
   GENERATED_BODY()
 
@@ -122,7 +121,12 @@ public:
   }
 
   template <typename InResponseType, typename InPayloadType = InResponseType>
-  TSharedRef<TRequestHandle<InResponseType, InPayloadType>, ESPMode::ThreadSafe>& CreateHttpRequest(TSharedRef<TRequestHandle<InResponseType, InPayloadType>>& Handle, const FString& Verb, const FString& Url = TEXT(""), const InPayloadType* RequestData = nullptr)
+  TSharedRef<TRequestHandle<InResponseType, InPayloadType>, ESPMode::ThreadSafe>& CreateHttpRequest(
+      TSharedRef<TRequestHandle<InResponseType, InPayloadType>>& Handle,
+      const FString& Verb,
+      const FString& Url = TEXT(""),
+      const InPayloadType* RequestData = nullptr
+  )
   {
     auto HttpRequest = FHttpModule::Get().CreateRequest();
     Handle->Request = HttpRequest;

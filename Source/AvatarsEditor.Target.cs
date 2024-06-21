@@ -12,6 +12,7 @@ public class AvatarsEditorTarget : TargetRules
 
         ExtraModuleNames.Add("TextHelpers");
     ExtraModuleNames.Add("AiIntellect");
+    ExtraModuleNames.Add("RestApi");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

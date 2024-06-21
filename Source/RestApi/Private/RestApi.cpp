@@ -1,6 +1,6 @@
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
-#include "RestApi/RestApi.h"
+#include "RestApi.h"
 
 URestApi::URestApi()
 {

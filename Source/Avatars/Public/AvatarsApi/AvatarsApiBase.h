@@ -4,7 +4,7 @@
 
 #include "AvatarsTypes.h"
 #include "CoreMinimal.h"
-#include "RestApi/RestApi.h"
+#include "RestApi.h"
 
 #include "AvatarsApiBase.generated.h"
 

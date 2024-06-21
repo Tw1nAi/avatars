@@ -19,6 +19,7 @@
 #include "Get.h"
 #include "Log.h"
 #include "Persistance/PersistanceController.h"
+#include "RestApi.h"
 #include "TextHelpers.h"
 #include "UserInterface/RootWidget.h"
 
