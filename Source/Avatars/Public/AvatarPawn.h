@@ -129,6 +129,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   USceneComponent* SceneComponent;
 
+  // TODO: could be instance any component that inherits from the AiVoice interface, which would allow for more generic approach.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UAudioComponent* AudioComponent;
 
@@ -138,9 +139,11 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   USkeletalMeshComponent* FaceMeshComponent;
 
+  // TODO: could be instance of any component that inherits from AiHearing interface, which would allow for more generic approach.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UAudioStreamComponent* AudioStreamComponent;
 
+  // TODO: both below methods should be placed within the AiVoice interface as StartListening and StopListening.
   /* Use this to initiate avatar's listening services, e.g. audio stream or other. */
   UFUNCTION(BlueprintCallable)
   void StartAudioStream();

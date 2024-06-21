@@ -21,6 +21,14 @@
       "AdditionalDependencies": [
         "Engine"
       ]
+    },
+    {
+      "Name": "AiIntellect",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "AdditionalDependencies": [
+        "Engine"
+      ]
     }
   ],
   "Plugins": [

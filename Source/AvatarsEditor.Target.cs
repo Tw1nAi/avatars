@@ -11,6 +11,7 @@ public class AvatarsEditorTarget : TargetRules
         DefaultBuildSettings = BuildSettingsVersion.V2;
 
         ExtraModuleNames.Add("TextHelpers");
+    ExtraModuleNames.Add("AiIntellect");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

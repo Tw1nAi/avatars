@@ -8,7 +8,8 @@ public class Avatars : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-    PublicDependencyModuleNames.Add("TextHelpers");
+        PublicDependencyModuleNames.Add("TextHelpers");
+        PublicDependencyModuleNames.Add("AiIntellect");
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HTTP", "WebSockets", "Json", "JsonUtilities", "UMG", "AssetRegistry", "SlateCore", "RuntimeAudioImporter", "AudioCaptureCore", "AudioCapture", "AudioMixer" });
 
         PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });
