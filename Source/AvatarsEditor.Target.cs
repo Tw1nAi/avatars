@@ -11,8 +11,9 @@ public class AvatarsEditorTarget : TargetRules
         DefaultBuildSettings = BuildSettingsVersion.V2;
 
         ExtraModuleNames.Add("TextHelpers");
-    ExtraModuleNames.Add("AiIntellect");
-    ExtraModuleNames.Add("RestApi");
+        ExtraModuleNames.Add("AiIntellect");
+        ExtraModuleNames.Add("RestApi");
+        ExtraModuleNames.Add("WebsocketAudioStream");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

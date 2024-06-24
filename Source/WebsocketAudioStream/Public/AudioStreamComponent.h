@@ -2,17 +2,21 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+
 #include "AudioCapture.h"
 #include "Components/ActorComponent.h"
-#include "CoreMinimal.h"
 #include "IWebSocket.h"
 
 #include "AudioStreamComponent.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogAudioStreamComponent, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogAudioStreamComponentTick, Log, All);
+
 DECLARE_DELEGATE(FAudioDataReceivedDelegate);
 
 UCLASS()
-class AVATARS_API UCustomAudioCapture : public UAudioCapture
+class WEBSOCKETAUDIOSTREAM_API UCustomAudioCapture : public UAudioCapture
 {
   GENERATED_BODY()
 public:
@@ -34,7 +38,8 @@ public:
 };
 
 /* Use this component to stream audio data via websockets connection. */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent)) class AVATARS_API UAudioStreamComponent : public UActorComponent
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class WEBSOCKETAUDIOSTREAM_API UAudioStreamComponent : public UActorComponent
 {
   GENERATED_BODY()
 

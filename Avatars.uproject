@@ -37,6 +37,14 @@
       "AdditionalDependencies": [
         "Engine"
       ]
+    },
+    {
+      "Name": "WebsocketAudioStream",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "AdditionalDependencies": [
+        "Engine"
+      ]
     }
   ],
   "Plugins": [

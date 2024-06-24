@@ -5,8 +5,10 @@
 #include "Async/Async.h"
 #include "AudioDeviceManager.h"
 #include "AudioMixerDevice.h"
-#include "Log.h"
 #include "WebSocketsModule.h"
+
+DEFINE_LOG_CATEGORY(LogAudioStreamComponent);
+DEFINE_LOG_CATEGORY(LogAudioStreamComponentTick);
 
 UAudioStreamComponent::UAudioStreamComponent()
 {
@@ -44,18 +46,22 @@ void UAudioStreamComponent::StartAudioStream()
 
   if (!Socket.IsValid())
   {
-    if (bDebug) ULog::Error(TEXT("Failed to create a websocket connection."));
+    if (bDebug) UE_LOG(LogAudioStreamComponent, Error, TEXT("Failed to create a websocket connection."));
     return;
   }
 
   Socket->OnConnected().AddLambda([this]() {
-    ULog::Info(TEXT("Connected!"));
+    UE_LOG(LogAudioStreamComponent, Display, TEXT("Audio Stream Component Websocket Connected!"));
     this->Socket->Send("open_audio_stream");
   });
-  Socket->OnMessage().AddLambda([](const FString& Message) { UE_LOG(LogTemp, Log, TEXT("[INFO] Received: %s"), *Message); });
-  Socket->OnConnectionError().AddLambda([this](const FString& Error) { UE_LOG(LogTemp, Log, TEXT("[ERROR] Received: %s"), *Error); });
+  Socket->OnMessage().AddLambda([](const FString& Message) {
+    UE_LOG(LogAudioStreamComponent, Display, TEXT("[INFO] Received: %s"), *Message);
+  });
+  Socket->OnConnectionError().AddLambda([this](const FString& Error) {
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("[ERROR] Received: %s"), *Error);
+  });
   Socket->OnClosed().AddLambda([](int32 StatusCode, const FString& Reason, bool bWasClean) {
-    ULog::Error(FString::Printf(TEXT("Closed: %d, %s, %d"), StatusCode, *Reason, bWasClean));
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("Closed: %d, %s, %d"), StatusCode, *Reason, bWasClean);
   });
   Socket->Connect();
 
@@ -63,7 +69,7 @@ void UAudioStreamComponent::StartAudioStream()
 
   if (bOpenDefaultStream && !AudioCapture->OpenDefaultAudioStream())
   {
-    UE_LOG(LogTemp, Error, TEXT("[ERROR] Failed to open a default audio stream to the audio capture device."));
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("[ERROR] Failed to open a default audio stream to the audio capture device."));
     return;
   }
 
@@ -76,7 +82,7 @@ void UAudioStreamComponent::StartAudioStream()
   Params.NumInputChannels = NumberOfChannels;
   if (!AudioCapture->OpenCustomAudioStream(Params))
   {
-    ULog::Error(TEXT("Failed to open a default audio stream to the audio capture device."));
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("Failed to open a default audio stream to the audio capture device."));
     return;
   }
   AudioCapture->StartCapturingAudio();
@@ -133,15 +139,20 @@ void UAudioStreamComponent::SendAudioData()
 
 void UAudioStreamComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-  if (bLogTick)
-  {
-    ULog::Info(FString::Printf(TEXT("AudioBuffer.Num() >= ChunkSize: %s"), AudioBuffer.Num() >= ChunkSize ? TEXT("true") : TEXT("false")));
-    if (Socket)
-    {
-      ULog::Info(FString::Printf(TEXT("Socket.IsValid(): %s"), Socket.IsValid() ? TEXT("true") : TEXT("false")));
-      ULog::Info(FString::Printf(TEXT("Socket->IsConnected(): %s"), Socket->IsConnected() ? TEXT("true") : TEXT("false")));
-    }
-  }
+  UE_LOG(
+      LogAudioStreamComponentTick,
+      Verbose,
+      TEXT("AudioBuffer.Num() >= ChunkSize: %s"),
+      AudioBuffer.Num() >= ChunkSize ? TEXT("true") : TEXT("false")
+  );
+  UE_LOG(LogAudioStreamComponentTick, Verbose, TEXT("Socket.IsValid(): %s"), Socket && Socket.IsValid() ? TEXT("true") : TEXT("false"));
+  UE_LOG(
+      LogAudioStreamComponentTick,
+      Verbose,
+      TEXT("Socket->IsConnected(): %s"),
+      Socket && Socket->IsConnected() ? TEXT("true") : TEXT("false")
+  );
+
   if (bShouldRun) SendAudioData();
 }
 
