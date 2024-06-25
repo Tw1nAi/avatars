@@ -1,3 +1,4 @@
+import json
 import threading
 import time
 from enum import Enum
@@ -83,29 +84,32 @@ class TranscriptionServer:
                 del websocket
                 break
 
-    def receive_consumer_client(self, message):
-        """ Return true if message was not consumed """
-
-        if message == "start_capture":
-            info("Received start capture message.")
-            events = self.get_events_by_category(ServerEvent.START_CAPTURE)
-            if len(events):
-                for event in events:
-                    event()
-
-        if message == "stop_capture":
-            info("Received stop capture message.")
-            events = self.get_events_by_category(ServerEvent.STOP_CAPTURE)
-            if len(events):
-                for event in events:
-                    event()
-
     def listen_consumer_client(self, websocket):
         while not self.exit_flag.is_set():
             try:
                 message = websocket.recv()
-                if self.consumer_client and message and isinstance(message, str):
-                    self.receive_consumer_client(message)
+
+                if message is None or self.consumer_client is None:
+                    continue
+
+                if message == "stop_capture":
+                    events = self.get_events_by_category(ServerEvent.STOP_CAPTURE)
+                    if len(events):
+                        for event in events:
+                            event()
+                    info("Received stop capture message.")
+                    continue
+
+                data = json.loads(message)
+                if "message" in data:
+                    if data["message"] == "start_capture":
+                        events = self.get_events_by_category(ServerEvent.START_CAPTURE)
+                        if len(events):
+                            for event in events:
+                                event(data)
+                        info("Received start capture message.")
+                        continue
+
 
             except Exception as e:
                 error(f"Error in listen_consumer_client: {e}")

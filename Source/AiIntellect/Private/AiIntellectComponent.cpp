@@ -1,5 +1,3 @@
-// Copyright Juice sp. z o. o., All Rights Reserved.
-
 #include "AiIntellectComponent.h"
 
 // Sets default values for this component's properties

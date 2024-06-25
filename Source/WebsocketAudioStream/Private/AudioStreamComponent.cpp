@@ -1,5 +1,3 @@
-// Copyright Juice sp. z o. o., All Rights Reserved.
-
 #include "AudioStreamComponent.h"
 
 #include "Async/Async.h"

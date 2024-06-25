@@ -22,7 +22,9 @@ if __name__ == "__main__":
         print_in_loop=True
     )
 
-    def on_start_capture():
+    def on_start_capture(data):
+        if "language" in data:
+            transcription.set_language(data["language"])
         transcription.reset_state()
         transcription.resume()
         server.receive_audio = True

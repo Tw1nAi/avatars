@@ -18,6 +18,7 @@
 #include "AvatarsGame.h"
 #include "Get.h"
 #include "Log.h"
+#include "MakeJsonString.h"
 #include "Persistance/PersistanceController.h"
 #include "RestApi.h"
 #include "TextHelpers.h"
@@ -357,11 +358,9 @@ FString AAvatarsPlayerController::ConnectToWhisperServer()
     WhisperWebsocket->Connect();
     return "WhisperWebsocket is not connected. Trying to connect to WhisperWebsocket";
   }
-  else
-  {
-    // GetWorldTimerManager().PauseTimer(this->ReconnectTimerHandle);
-    return "WhisperWebsocket is connected.";
-  }
+
+  // GetWorldTimerManager().PauseTimer(this->ReconnectTimerHandle);
+  return "WhisperWebsocket is connected.";
 }
 
 void AAvatarsPlayerController::ClearSpeachToText()
@@ -377,7 +376,8 @@ void AAvatarsPlayerController::EnableAudioCapture()
   if (ULog::ErrorIf(!WhisperWebsocket.IsValid(), "!WhisperWebsocket.IsValid()")) return;
 
   if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, TEXT("EnableAudioCapture"));
-  WhisperWebsocket->Send("start_capture");
+  FString Message = MakeJsonString("message", "start_capture", "language", GetLanguageAsIsoString());
+  WhisperWebsocket->Send(Message);
 }
 
 void AAvatarsPlayerController::DisableAudioCapture()

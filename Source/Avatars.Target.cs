@@ -14,6 +14,7 @@ public class AvatarsTarget : TargetRules
         ExtraModuleNames.Add("AiIntellect");
         ExtraModuleNames.Add("RestApi");
         ExtraModuleNames.Add("WebsocketAudioStream");
+    ExtraModuleNames.Add("JsonHelpers");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

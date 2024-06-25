@@ -90,7 +90,9 @@ class TranscriptionService:
             "zafollowować",
             "Nie zapomnijcie zasubskrybować oraz zafollowować mnie na Facebooku!",
             "Zdjęcia i montaż",
-            "Pracownia Prawa i Sprawiedliwość"
+            "Pracownia Prawa i Sprawiedliwość",
+            "Teraz wracamy do naszego odcinka"
+            "Teraz wracamy do naszego odcinka, w którym pokażę Wam",
         ]
 
         """ Transcription state """
@@ -164,6 +166,15 @@ class TranscriptionService:
         os.system("clear")
 
         return cleared
+
+    def set_language(self, language):
+        if language == self.language: return
+
+        self.language = language
+        info(f"Language set to: {language}")
+
+        self.multilingual = language != "en"
+        info(f"Multilingual set to: {self.multilingual}")
 
     def includes_excluded_phrase(self, text):
         clean_new_text = regex.sub(r'[^a-zA-Z]', '', text, flags=regex.UNICODE).lower()
