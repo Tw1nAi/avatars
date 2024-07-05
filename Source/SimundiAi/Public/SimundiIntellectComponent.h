@@ -28,6 +28,7 @@ class SIMUNDIAI_API USimundiIntellectComponent : public UAiIntellectComponent
   GENERATED_BODY()
 
 protected:
+  UPROPERTY()
   TObjectPtr<USimundiApi> Api;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -37,7 +38,9 @@ protected:
   UPROPERTY()
   FString PendingMessage;
 
+  UPROPERTY()
   FString ConversationId;
+
   void SetConversationId(const FString Id);
 
   void GetAvatarsData();

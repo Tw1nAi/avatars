@@ -149,7 +149,7 @@ void USimundiIntellectComponent::BeginPlay()
 {
   Super::BeginPlay();
 
-  Api = NewObject<USimundiApi>();
+  Api = NewObject<USimundiApi>(this);
   if (Api == nullptr)
   {
     FString Message = FString::Printf(TEXT("Could not create instance of USimundiApi."));
