@@ -56,9 +56,9 @@ class TranscriptionService:
         self.model_size = model_size
         self.rate = 16000
         self.same_output_occurrence = 0
-        self.same_output_threshold = 3
+        self.same_output_threshold = 2
         self.speach_silence_threshold = 1
-        self.min_sample_duration = 0.25 # 1.0
+        self.min_sample_duration = 0.4 # 1.0
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device_index = 1
         self.speach_to_text = WhisperModel(

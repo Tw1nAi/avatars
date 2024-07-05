@@ -7,9 +7,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Utils/Public/TimeoutManager.h"
 
+#include "AiIntellectComponent.h"
+#include "Api/Models/Conversation.h"
 #include "AvatarPawn.h"
-#include "AvatarsApi/Api_v1/Models/Avatar.h"
-#include "AvatarsApi/Api_v2/Models/Conversation_v2.h"
 #include "AvatarsTypes.h"
 
 #include "AvatarsPlayerController.generated.h"
@@ -17,8 +17,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageChangeSignature, EAvatarLanguage, Language);
 
 class IWebSocket;
-class UAvatarsApi;
-class UAvatarsApi_v2;
 class UDataTable;
 class URootWidget;
 class URuntimeAudioExporter;
@@ -31,7 +29,6 @@ class AVATARS_API AAvatarsPlayerController : public APlayerController
 public:
   AAvatarsPlayerController();
   virtual void BeginPlay() override;
-  virtual void Tick(float DeltaSeconds) override;
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   static AAvatarsPlayerController* Get(UWorld* World);
@@ -72,13 +69,11 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
   bool bDebug = false;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
-  EAvatarCharacter DefaultAvatar;
-
+  /* This method should return either avatar with bIsDefault set to true or the first avatar found on the map. */
   UFUNCTION(BlueprintCallable, Blueprintpure)
-  const FAvatarData& GetDefaultAvatarData() const;
+  AAvatarPawn* GetDefaultAvatar() const;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller", meta = (DisplayAfter = "AvatarsDataTable"))
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
   bool bShowRuntimeProperties = false;
 
   /* When checked every user message will displayed along with recorded audio and transcription. */
@@ -95,12 +90,18 @@ public:
       VisibleAnywhere,
       BlueprintReadWrite,
       Category = "Avatars Player Controller",
-      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides, DisplayAfter = "AvatarsDataTable")
+      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides)
   )
   URootWidget* RootWidget;
 
-  void SetupWidgets();
-  void LoadAvatarsData();
+  UFUNCTION(BlueprintCallable)
+  void StartNewConversation(const bool bDisplayAvatarResponse = false);
+
+  UFUNCTION(BlueprintCallable, Blueprintpure)
+  bool StartedConversation() const;
+
+  // Create root widget and return false if there was an error.
+  bool CreateRootWidget();
   void ScheduleHideLoadingScreen();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|User Interface")
@@ -149,29 +150,12 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
   float InitialLoadDelay = 2.f;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
-  UDataTable* AvatarsDataTable;
-
-  UPROPERTY(
-      VisibleAnywhere,
-      BlueprintReadWrite,
-      Category = "Avatars Player Controller",
-      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides, DisplayAfter = "AvatarsDataTable")
-  )
-  TArray<FAvatarData> Avatars;
-  UFUNCTION() FAvatarData GetNextAvatar();
+  // List of spawned avatars, that is populated when the game starts.
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  TArray<AAvatarPawn*> SpawnedAvatars;
 
   UFUNCTION(BlueprintCallable)
-  AAvatarPawn* SpawnAvatar(TSubclassOf<AAvatarPawn> AvatarClass);
-
-  UFUNCTION(BlueprintCallable)
-  void OnAvatarsDataReceived();
-
-  UFUNCTION(BlueprintCallable)
-  void StartNewConversation(const bool bDisplayAvatarResponse);
-
-  UFUNCTION(BlueprintCallable, Blueprintpure)
-  bool StartedConversation();
+  AAvatarPawn* GetNextAvatar();
 
   /**
    * When this is set to true starting new conversation witll be followed by playing greeting dialog.
@@ -183,52 +167,22 @@ public:
   UPROPERTY()
   TArray<FString> PendingMessages;
 
-  UPROPERTY(
-      VisibleAnywhere,
-      BlueprintReadWrite,
-      Category = "Avatars Player Controller",
-      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides)
-  )
-  int32 ConversationId = -1;
-
-  UPROPERTY(
-      VisibleAnywhere,
-      BlueprintReadWrite,
-      Category = "Avatars Player Controller",
-      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides)
-  )
-  FString ConversationId_v2 = "";
-
-  UFUNCTION(BlueprintCallable)
-  void SetConversationId(int32 Id);
-
-  UFUNCTION(BlueprintCallable)
-  void SetConversationId_v2(FString Id);
-
-  /* Send user's text message to AI agent. Returns true if the message wasn't empty, was correctly formated and sent and false otherwise. */
+  /* Send user's text message to AI agent. Returns true if the message wasn't empty,
+  was correctly formated and sent while false otherwise. */
   UFUNCTION(BlueprintCallable, meta = (ReturnValueDisplayName = "Message Sent"))
   bool SendUserMessage(FString Message);
 
   UFUNCTION(BlueprintCallable)
-  void DisplayAvatarMessage(FAvatarMessage Message);
-
-  UFUNCTION(BlueprintCallable)
-  void DisplayAvatarMessage_v2(FMessage_v2 Message, const TArray<FString>& NewSuggestions);
+  void DisplayAvatarMessage(FString Message, FString AudioPath, const TArray<FString>& NewSuggestions);
 
   UPROPERTY()
   TArray<FString> Suggestions;
 
   UFUNCTION(BlueprintCallable)
-  void OnCharacterSelection(const FAvatarId& AvatarId);
+  void OnCharacterSelection(AActor* SelectedActor);
 
   UFUNCTION(BlueprintCallable, Blueprintpure)
   AAvatarPawn* GetSelectedAvatar() const;
-
-  UFUNCTION(BlueprintCallable, Blueprintpure)
-  const FAvatarId& GetSelectedAvatarId() const;
-
-  UFUNCTION(BlueprintCallable, Blueprintpure)
-  FAvatarData& GetSelectedAvatarData();
 
   UFUNCTION(BlueprintCallable)
   void SetAvatarState(EAvatarState State);
@@ -241,14 +195,6 @@ public:
 
   /* Websocket aimed at connecting with dockerised Whisper server. */
   FTimerHandle ReconnectTimerHandle;
-
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Whisper Websocket")
-  UAvatarsApi* Api;
-  void SetupApi_v1();
-
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Whisper Websocket")
-  UAvatarsApi_v2* Api_v2;
-  void SetupApi_v2();
 
   TSharedPtr<IWebSocket> WhisperWebsocket;
   void SetupWhisperWebsockets();

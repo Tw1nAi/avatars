@@ -13,7 +13,7 @@
 
 #include "CharacterThumbnailWidget.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnClickDelegate, const FAvatarId&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnClickDelegate, AActor*);
 
 class UTexture2D;
 
@@ -23,14 +23,10 @@ class AVATARS_API UCharacterThumbnailWidget : public UUserWidget
   GENERATED_BODY()
 
 public:
-  FAvatarId AvatarId;
   bool bIsSelected;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)
-  EAvatarCharacter AvatarTag;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)
-  FString CharacterName;
+  UPROPERTY()
+  AActor* Avatar;
 
   /* Should be of one the following: UMaterial, UMaterialInstance or UTexture2D */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AvatarThumbnail)

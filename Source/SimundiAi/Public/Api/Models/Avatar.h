@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "AvatarsTypes.h"
 #include "CoreMinimal.h"
 
-#include "Avatar_v2.generated.h"
+#include "Avatar.generated.h"
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FAvatar_v2
+struct FAvatar
 {
   GENERATED_USTRUCT_BODY()
 
@@ -16,17 +15,14 @@ struct FAvatar_v2
   FString AvatarId;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EAvatarCharacter Tag;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString AvatarName;
 };
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FGetAvatarsResponse_v2
+struct FGetAvatarsResponse
 {
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FAvatar_v2> Avatars;
+  TArray<FAvatar> Avatars;
 };

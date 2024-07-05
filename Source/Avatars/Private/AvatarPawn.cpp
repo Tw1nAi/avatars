@@ -8,8 +8,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Sound/SoundWave.h"
 
+#include "AiIntellectComponent.h"
 #include "AudioStreamComponent.h"
-#include "AvatarsApi/AvatarsApiBase.h"
 #include "BodyAnimInstance.h"
 #include "FaceAnimInstance.h"
 #include "Get.h"
@@ -26,6 +26,8 @@ AAvatarPawn::AAvatarPawn()
     SetRootComponent(SceneComponent);
   }
 
+  IntellectComponent = CreateOptionalDefaultSubobject<UAiIntellectComponent>(TEXT("IntellectComponent"));
+
   AudioComponent = CreateOptionalDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
   if (AudioComponent != nullptr)
   {
@@ -35,22 +37,12 @@ AAvatarPawn::AAvatarPawn()
 
   AudioStreamComponent = CreateOptionalDefaultSubobject<UAudioStreamComponent>(TEXT("AudioStreamComponent"));
 
-  if (bApplySceneSetup)
-  {
-    ApplySceneSetup();
-  }
-
   CameraMaxOffset = FVector(40.0, 100.0, 40.0);
 }
 
 void AAvatarPawn::BeginPlay()
 {
   Super::BeginPlay();
-
-  if (bApplySceneSetup)
-  {
-    ApplySceneSetup();
-  }
 }
 
 void AAvatarPawn::StartAudioStream()
@@ -79,6 +71,11 @@ bool AAvatarPawn::GetAvatarsController()
 {
   AAvatarsPlayerController::Get(GetWorld());
   return AvatarsController != nullptr;
+}
+
+FAiIdentity& AAvatarPawn::GetIdentity()
+{
+  return AvatarData;
 }
 
 void AAvatarPawn::ApplySettings(FAvatarSettings& Settings)
@@ -213,7 +210,7 @@ void AAvatarPawn::SetState(EAvatarState NewState)
 
 bool AAvatarPawn::GetDialogSoundWave(const FString Path, const FString AssetName, FString LanguageString, USoundWave*& OutDialogSound)
 {
-  const FString AudioPath = Path + "Dialogs/" + LanguageString + "/Audio/";
+  const FString AudioPath = "/Game" + Path + "Dialogs/" + LanguageString + "/Audio/";
 
   if (LastDialogPath == (AudioPath + AssetName) && LastDialogSoundWave != nullptr)
   {
@@ -271,7 +268,7 @@ bool AAvatarPawn::GetDialogFaceAnimation(
     const FString Path, const FString AssetName, FString LanguageString, UAnimSequence*& OutFaceAnimation
 )
 {
-  const FString AnimationPath = Path + "Dialogs/" + LanguageString + "/Animations/";
+  const FString AnimationPath = "/Game" + Path + "Dialogs/" + LanguageString + "/Animations/";
   const FString FullName = TEXT("animFace_") + AssetName;
 
   if (LastFaceAnimationPath == (AnimationPath + FullName) && LastFaceAnimation != nullptr)
@@ -337,15 +334,4 @@ void AAvatarPawn::StopDialog()
   };
 
   FaceAnimBP->StopFaceAnimation();
-}
-
-void AAvatarPawn::ApplySceneSetup()
-{
-  SetActorLocation(SceneSetup.Location);
-  SetActorRotation(SceneSetup.Rotation);
-
-  if (BodyMeshComponent != nullptr)
-  {
-    BodyMeshComponent->SetRelativeScale3D(FVector(SceneSetup.MeshScale));
-  }
 }

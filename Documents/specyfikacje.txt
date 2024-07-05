@@ -18,3 +18,4 @@ System: Windows 10 Pro
 Dysk: SSD Kingston KC3000 2TB M.2 NVME 2280 PCIE GEN 4.0 X4 (7000/7000 MB/S)
 Obudowa: Modecom Oberon PRO LE ATX USB 3.0 Black BEZ ZASILACZA
 Zasilacz: Qoltec ATX 1600W 80 Plus Gold Data mining
+

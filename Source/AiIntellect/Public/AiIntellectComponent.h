@@ -3,24 +3,35 @@
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
 
-#include "AiIntellectInterface.h"
+#include "AiIdentityInterface.h"
 
 #include "AiIntellectComponent.generated.h"
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class AIINTELLECT_API UAiIntellectComponent : public UActorComponent
+DECLARE_LOG_CATEGORY_EXTERN(LogAiIntellect, Display, All);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+    FAiResponseSignature, FString, Message, FString, AudioPath, const TArray<FString>&, NewSuggestions
+);
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent)) class AIINTELLECT_API UAiIntellectComponent : public UActorComponent
 {
   GENERATED_BODY()
 
 public:
   UAiIntellectComponent();
 
-protected:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FAiIdentity Identity;
+
+  UFUNCTION(BlueprintCallable)
+  bool GetOwnerIdentity();
+
+  FAiResponseSignature OnAiResponseEvent;
+
+  /* Return false if could not send the message. */
+  virtual bool RespondTo(const FString& Message = FString(), const FString& LanguageIso = FString());
+  virtual void StartNewConversation(const FString& LanguageIso = FString());
+  virtual bool HasStartedConversation() const;
+
   virtual void BeginPlay() override;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-  TSubclassOf<UObject> IntellectClass;
-
-  UPROPERTY()
-  TScriptInterface<IAiIntellectInterface> Intellect;
 };

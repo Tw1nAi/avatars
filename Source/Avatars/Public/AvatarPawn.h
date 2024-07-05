@@ -4,112 +4,48 @@
 
 #include "Camera/CameraActor.h"
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInstance.h"
 
+#include "AiIdentityInterface.h"
 #include "AvatarsTypes.h"
 #include "Settings/Settings.h"
 
 #include "AvatarPawn.generated.h"
 
+class UAiIntellectComponent;
 class AAvatarsPlayerController;
 class APlayerController;
 class UAudioStreamComponent;
 class FAssetRegistryModule;
 class UAudioComponent;
-class UAvatarsApiBase;
 class USceneComponent;
 class USkeletalMeshComponent;
 class USoundWave;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarStateChangeSignature, EAvatarState, OldState, EAvatarState, NewState);
 
-USTRUCT(BlueprintType)
-struct AVATARS_API FAvatarData : public FTableRowBase
-{
-  GENERATED_BODY()
-
-public:
-  FAvatarId Id;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EAvatarCharacter AvatarTag;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString Name;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString AssetsPath;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EApiVersion ApiVersion;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<AAvatarPawn> AvatarClass;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UMaterialInstance* ThumbnailImage;
-
-  // Match incomming name by splitting it on spaces and checking all parts are maching with own splited name.
-  bool MatchByName(const FString& NameToMatch) const
-  {
-    TArray<FString> NameParts;
-    NameToMatch.ParseIntoArray(NameParts, TEXT(" "), true);
-    TArray<FString> OwnNameParts;
-    Name.ParseIntoArray(OwnNameParts, TEXT(" "), true);
-
-    if (NameParts.Num() != OwnNameParts.Num()) return false;
-
-    for (int32 i = 0; i < NameParts.Num(); i++)
-    {
-      if (NameParts[i] != OwnNameParts[i]) return false;
-    }
-
-    return true;
-  }
-};
-
-USTRUCT(BlueprintType)
-struct AVATARS_API FAvatarSceneSetup
-{
-  GENERATED_BODY()
-
-public:
-  /* The location the avatar will placed to both at in the construction script and at the begin play. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FVector Location = FVector(0.0, 0.0, -3.5);
-
-  /* Same as location but for avatar's rotation. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FRotator Rotation;
-
-  /* Single float to control the value of lights at the scene. Value of 1 (one) is the one set by default in editor in level. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  float LightsIntensity = 1.0;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  float MeshScale = 1.0;
-};
-
 UCLASS()
-class AVATARS_API AAvatarPawn : public APawn
+class AVATARS_API AAvatarPawn : public APawn, public IAiIdentityInterface
 {
   GENERATED_BODY()
 
 public:
   AAvatarPawn();
 
+  /* Use this to mark default avatar that will be displayed as first when the app starts. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
+  bool bIsDefault;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Avatar")
+  TObjectPtr<UAiIntellectComponent> IntellectComponent;
+
   /* Use this property to set reference for custom camera for this actor.
     If not null it will be used as camera fot this avatar upon selection/possesion. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  ACameraActor* CustomCamera;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
+  TObjectPtr<ACameraActor> CustomCamera;
 
-  /* The version of the api that this avatar should use. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<UAvatarsApiBase> ApiClass;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
   bool bDebug;
 
 protected:
@@ -117,11 +53,10 @@ protected:
   bool GetAvatarsController();
 
 public:
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FAvatarId Id;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
+  FAiIdentity AvatarData;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EApiVersion ApiVersion;
+  virtual FAiIdentity& GetIdentity() override;
 
   UFUNCTION(BlueprintCallable)
   void ApplySettings(FAvatarSettings& Settings);
@@ -153,7 +88,7 @@ public:
 
 protected:
   /* This state should stay protected to allow for side effect when setting it via SetState() method. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
   EAvatarState AvatarState;
 
 public:
@@ -200,17 +135,8 @@ public:
   UFUNCTION(BlueprintCallable)
   void OnAudioFinishedPlaying();
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  bool bApplySceneSetup;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FAvatarSceneSetup SceneSetup;
-
-  UFUNCTION(BlueprintCallable)
-  void ApplySceneSetup();
-
   /* Maximum offset allowed for user to make. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
   FVector CameraMaxOffset;
 
   /* Overall offset used with AddCameraLocation, the axes are:
@@ -218,7 +144,7 @@ public:
     y = far (+), close (-)
     z = up (+), down (-)
    */
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Avatar")
   FVector CameraInitialLocation;
 
   /* Check if avatar has its custom camera actor reference set and stet that camera to active. Return false if no custom camera was found.

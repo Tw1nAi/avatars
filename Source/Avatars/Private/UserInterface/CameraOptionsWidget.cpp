@@ -50,9 +50,9 @@ void UCameraOptionsWidget::SaveSettings()
     AAvatarPawn* Avatar = AAvatarsPlayerController::Get(GetWorld())->GetSelectedAvatar();
     if (!Avatar) return;
 
-    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(Avatar->Id.v2);
+    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(Avatar->AvatarData.Name);
     Settings.CameraSettings.CameraOffset = Avatar->CameraOffset;
-    Persistance->SetAvatarSettings(Avatar->Id.v2, Settings);
+    Persistance->SetAvatarSettings(Avatar->AvatarData.Name, Settings);
     Persistance->SaveAll();
   }
 }

@@ -1,0 +1,89 @@
+Computer Information:
+Manufacturer: ASRock
+Model: Z790 Steel Legend WiFi
+Form Factor: Desktop
+No Touch Input Detected
+
+Processor Information:
+CPU Vendor: GenuineIntel
+CPU Brand: 13th Gen Intel(R) Core(TM) i9-13900KF
+CPU Family: 0x6
+CPU Model: 0xb7
+CPU Stepping: 0x1
+CPU Type: 0x0
+Speed: 2995 MHz
+32 logical processors
+24 physical processors
+Hyper-threading: Supported
+FCMOV: Supported
+SSE2: Supported
+SSE3: Supported
+SSSE3: Supported
+SSE4a: Unsupported
+SSE41: Supported
+SSE42: Supported
+AES: Supported
+AVX: Supported
+AVX2: Supported
+AVX512F: Unsupported
+AVX512PF: Unsupported
+AVX512ER: Unsupported
+AVX512CD: Unsupported
+AVX512VNNI: Unsupported
+SHA: Supported
+CMPXCHG16B: Supported
+LAHF/SAHF: Supported
+PrefetchW: Unsupported
+
+Operating System Version:
+Windows 10 (64 bit)
+NTFS: Supported
+Crypto Provider Codes: Supported 311 0x0 0x0 0x0
+
+Video Card:
+Driver: NVIDIA GeForce RTX 4070
+DirectX Driver Name: nvldumd.dll
+Driver Version: 32.0.15.5599
+DirectX Driver Version: 32.0.15.5599
+Driver Date: 6 1 2024
+OpenGL Version: 4.6
+Desktop Color Depth: 32 bits per pixel
+Monitor Refresh Rate: 59 Hz
+DirectX Card: NVIDIA GeForce RTX 4070
+VendorID: 0x10de
+DeviceID: 0x2786
+Revision: 0xa1
+Number of Monitors: 1
+Number of Logical Video Cards: 1
+No SLI or Crossfire Detected
+Primary Display Resolution: 3440 x 1440
+Desktop Resolution: 3440 x 1440
+Primary Display Size: 31.30" x 13.15" (33.94" diag), 79.5cm x 33.4cm (86.2cm diag)
+Primary Bus: PCI Express 8x
+Primary VRAM: 12281 MB
+Supported MSAA Modes: 2x 4x 8x
+
+Sound card:
+Audio device: PL3466WQ (NVIDIA High Definitio
+
+Memory:
+RAM: 130898 Mb
+
+VR Hardware:
+VR Headset: None detected
+
+Miscellaneous:
+UI Language: English
+Media Type: Undetermined
+Total Hard Disk Space Available: 1953396 MB
+Largest Free Hard Disk Block: 215592 MB
+OS Install Date: Nov 16 2023
+Game Controller: None detected
+MAC Address hash: 80b41b7f7961e10adc65df7e37e5d5421f5a52ce
+
+Storage:
+Disk serial number hash: f28eb86c
+Number of SSDs: 1
+SSD sizes: 2048G
+Number of HDDs: 0
+Number of removable drives: 0

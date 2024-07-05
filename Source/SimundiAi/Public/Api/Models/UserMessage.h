@@ -2,31 +2,32 @@
 
 #pragma once
 
-#include "AvatarsTypes.h"
+#include "Api/Models/Conversation.h"
 #include "CoreMinimal.h"
 
-#include "Avatar.generated.h"
+#include "UserMessage.generated.h"
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FAvatar
+struct FUserMessage
 {
   GENERATED_USTRUCT_BODY()
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  uint8 Id;
+  FUserMessage() {}
+
+  FUserMessage(FString Text) : Text(Text) {}
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FName Name;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EAvatarCharacter Tag;
+  FString Text;
 };
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FGetAvatarsResponse
+struct FPostUserMessageResponse
 {
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FAvatar> Avatars;
+  FMessage Message;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FString> Propositions;
 };

@@ -1,3 +1,4 @@
+
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
 #include "AvatarsPlayerController.h"
@@ -6,15 +7,9 @@
 #include "IWebSocket.h"
 #include "WebSocketsModule.h"
 
+#include "AiIdentity.h"
+#include "AiIntellectComponent.h"
 #include "AvatarPawn.h"
-#include "AvatarsApi/Api_v1/AvatarsApi.h"
-#include "AvatarsApi/Api_v1/Models/Actions.h"
-#include "AvatarsApi/Api_v1/Models/Conversation.h"
-#include "AvatarsApi/Api_v1/Models/UserMessage.h"
-#include "AvatarsApi/Api_v2/AvatarsApi_v2.h"
-#include "AvatarsApi/Api_v2/Models/Avatar_v2.h"
-#include "AvatarsApi/Api_v2/Models/Conversation_v2.h"
-#include "AvatarsApi/Api_v2/Models/UserMessage_v2.h"
 #include "AvatarsGame.h"
 #include "Get.h"
 #include "Log.h"
@@ -29,7 +24,6 @@ AAvatarsPlayerController::AAvatarsPlayerController()
   ExcludedPhrases.Add(TEXT("KONIEC!"));
   IdleGreetingTimeout.TimeoutDelay = 30.0f;
   bApiDone = true;
-  DefaultAvatar = EAvatarCharacter::WojtekTheBear;
 }
 
 AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
@@ -59,7 +53,7 @@ void AAvatarsPlayerController::BeginPlay()
 {
   Super::BeginPlay();
 
-  // TODO : move this somehow to the game instance
+  // TODO : move this to AAvatarPawn an init when the avatar is created or possesed
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
   {
     ChangeAvatarTimeout.SetTimeoutDelay(Persistance->ConversationSettings.AvatarChangeTimeout);
@@ -73,24 +67,38 @@ void AAvatarsPlayerController::BeginPlay()
   ThinkingTimeout.bDebug = bDebug;
 
   DisableInput(this);
-  LoadAvatarsData();
-  SetupWidgets();
-  // SetupApi_v1();
-  SetupApi_v2();
+  if (!CreateRootWidget()) return;
+
+  TArray<AActor*> SpawnedAvatarsActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAvatarPawn::StaticClass(), SpawnedAvatarsActors);
+  for (AActor* Actor : SpawnedAvatarsActors)
+  {
+    AAvatarPawn* Avatar = Cast<AAvatarPawn>(Actor);
+    if (Avatar != nullptr)
+    {
+      SpawnedAvatars.Add(Avatar);
+    }
+  }
+
+  if (SpawnedAvatars.Num() == 0)
+  {
+    FString WarningMessage = "No avatars found in the scene.";
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *WarningMessage);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, WarningMessage);
+  }
+
+  RootWidget->CreateAvatarsThumbnails(SpawnedAvatars);
+
+  OnCharacterSelection(GetDefaultAvatar());
+  ScheduleHideLoadingScreen();
 
   if (bUseLocalTranscription)
   {
-    // Websockets transcription is currently used only with local transcription.
     SetupWhisperWebsockets();
     ConnectToWhisperServer();
   }
 
   // ScheduleHideLoadingScreen();
-}
-
-void AAvatarsPlayerController::Tick(float DeltaSeconds)
-{
-  Super::Tick(DeltaSeconds);
 }
 
 void AAvatarsPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -100,57 +108,48 @@ void AAvatarsPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
   CleanupWebSocket();
 }
 
-void AAvatarsPlayerController::LoadAvatarsData()
+void AAvatarsPlayerController::StartNewConversation(const bool bDisplayAvatarResponse)
 {
-  if (AvatarsDataTable)
-  {
-    for (const auto& RowIt : AvatarsDataTable->GetRowMap())
-    {
-      FName RowName = RowIt.Key;
-      FAvatarData* AvatarData = reinterpret_cast<FAvatarData*>(RowIt.Value);
+  AAvatarPawn* Avatar = GetSelectedAvatar();
+  if (Avatar == nullptr) return;
 
-      if (AvatarData == nullptr)
-      {
-        if (bDebug) ULog::Error("Could not get row data from AvatarsDataTable.");
-        continue;
-      }
-      AvatarData->Id.AvatarTag = AvatarData->AvatarTag;
-      Avatars.Add(*AvatarData);
-      if (bDebug)
-      {
-        UE_LOG(LogTemp, Log, TEXT("AvatarTag: %d"), static_cast<uint8>(AvatarData->AvatarTag));
-        UE_LOG(LogTemp, Log, TEXT("Name: %s"), *AvatarData->Name);
-        UE_LOG(LogTemp, Log, TEXT("AssetsPath: %s"), *AvatarData->AssetsPath);
-        UE_LOG(LogTemp, Log, TEXT("ApiVersion: %d"), static_cast<uint8>(AvatarData->ApiVersion));
-        UE_LOG(LogTemp, Log, TEXT("AvatarClass: %s"), *AvatarData->AvatarClass->GetName());
-        if (AvatarData->ThumbnailImage)
-        {
-          UE_LOG(LogTemp, Log, TEXT("ThumbnailImage: %s"), *AvatarData->ThumbnailImage->GetName());
-        }
-        else
-        {
-          UE_LOG(LogTemp, Log, TEXT("ThumbnailImage: None"));
-        }
-      }
-    }
-  }
-  GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("message"));
+  Avatar->IntellectComponent->StartNewConversation(GetLanguageAsIsoString());
 }
 
-void AAvatarsPlayerController::SetupWidgets()
+bool AAvatarsPlayerController::StartedConversation() const
 {
-  if (RootWidgetClass != nullptr)
+  AAvatarPawn* Avatar = GetSelectedAvatar();
+  if (Avatar == nullptr) return false;
+
+  return Avatar->IntellectComponent->HasStartedConversation();
+}
+
+bool AAvatarsPlayerController::CreateRootWidget()
+{
+  if (RootWidgetClass == nullptr)
   {
-    UUserWidget* Widget = CreateWidget<UUserWidget>(this, RootWidgetClass);
-    if (Widget != nullptr)
-    {
-      Widget->AddToViewport();
-      RootWidget = Cast<URootWidget>(Widget);
-      RootWidget->AddToViewport();
-      RootWidget->OnCharacterThumbnailClickEvent.AddUObject(this, &AAvatarsPlayerController::OnCharacterSelection);
-      // RootWidget->bDebug = bDebug;
-    }
+    FString ErrorMessage = "RootWidgetClass is not set in AAvatarsPlayerController";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessage);
+    return false;
   }
+
+  UUserWidget* Widget = CreateWidget<UUserWidget>(this, RootWidgetClass);
+  if (Widget == nullptr)
+  {
+    FString ErrorMessage = "Could not create RootWidgetClass in AAvatarsPlayerController";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessage);
+    return false;
+  }
+
+  Widget->AddToViewport();
+  RootWidget = Cast<URootWidget>(Widget);
+  RootWidget->AddToViewport();
+  RootWidget->OnCharacterThumbnailClickEvent.AddUObject(this, &AAvatarsPlayerController::OnCharacterSelection);
+  // RootWidget->bDebug = bDebug;
+
+  return true;
 }
 
 void AAvatarsPlayerController::ScheduleHideLoadingScreen()
@@ -166,93 +165,6 @@ void AAvatarsPlayerController::ScheduleHideLoadingScreen()
     WeakController->RootWidget->HideLoadingScreen();
   });
   GetWorldTimerManager().SetTimer(Handle, HideLoadingScreen, InitialLoadDelay, false);
-}
-
-void AAvatarsPlayerController::SetupApi_v1()
-{
-  Api = NewObject<UAvatarsApi>(this, UAvatarsApi::StaticClass());
-  if (Api == nullptr)
-  {
-    if (bDebug) ULog::Error("Could not create instance of UAvatarsApi.");
-    return;
-  }
-
-  Api->bDebug = bDebug;
-  Api->SetBaseUrl("http://localhost:5001/api/v1");
-  Api->AddDefaultHeader("Content-Type", "application/json");
-
-  /* Create initial requests. */
-  Api->GetAvatars()
-      ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](const FGetAvatarsResponse& Data) mutable {
-        if (ULog::ErrorIf(
-                !WeakController.IsValid(),
-                "AvatarsPlayerController this reference is not valid Api->GetAvatars() lambda in AAvatarsPlayerController"
-            ))
-          return;
-
-        // for (const FAvatar RemoteAvatar : Data.Avatars)
-        // {
-        //   const bool bIsZumbach = RemoteAvatar.Name.ToString().Contains("zumbach");
-        //   FString SearchName = bIsZumbach ? "Jan Zumbach" : "Jan Kowalewski";
-
-        //   for (FAvatarData& LocalData : WeakController->Avatars)
-        //   {
-        //     if (LocalData.ApiVersion == EApiVersion::API_v1 && LocalData.MatchByName == SearchName)
-        //     {
-        //       LocalData.Id.v1 = RemoteAvatar.Id;
-        //       // // ! directory could be set in data table
-        //       // FString Directory = bIsZumbach ? "JanZumbach" : "JanKowalewski";
-        //       // LocalData.AssetsPath = "/Game/Avatars/Characters/" + Directory + "/";
-        //       // const EAvatarCharacter Tag = bIsZumbach ? EAvatarCharacter::JanZumbach : EAvatarCharacter::JanKowalewski;
-        //       // LocalData.AvatarTag = Tag;
-        //       // LocalData.Id.AvatarTag = Tag;
-        //     }
-        //   }
-        // }
-
-        // WeakController->OnAvatarsDataReceived();
-      })
-      ->Run();
-}
-
-void AAvatarsPlayerController::SetupApi_v2()
-{
-  Api_v2 = NewObject<UAvatarsApi_v2>(this, UAvatarsApi_v2::StaticClass());
-  if (Api_v2 == nullptr)
-  {
-    if (bDebug) ULog::Error("Could not create instance of UAvatarsApi_v2.");
-    return;
-  }
-
-  Api_v2->bDebug = bDebug;
-  Api_v2->SetBaseUrl("http://localhost:5005/api/v2");
-  Api_v2->AddDefaultHeader("Content-Type", "application/json");
-
-  /* Create initial requests. */
-  Api_v2->GetAvatars()
-      ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](const FGetAvatarsResponse_v2& Data) mutable {
-        if (ULog::ErrorIf(
-                !WeakController.IsValid(),
-                "AvatarsPlayerController this reference is not valid in Api_v2->GetAvatars() in AAvatarsPlayerController"
-            ))
-          return;
-        if (ULog::ErrorIf(Data.Avatars.Num() == 0, "No avatars data received from Api_v2")) return;
-
-        for (const FAvatar_v2 RemoteAvatar : Data.Avatars)
-        {
-          for (FAvatarData& LocalData : WeakController->Avatars)
-          {
-            if (LocalData.ApiVersion == EApiVersion::API_v2 && LocalData.MatchByName(RemoteAvatar.AvatarName))
-            {
-              LocalData.Id.v2 = RemoteAvatar.AvatarId;
-              LocalData.Name = RemoteAvatar.AvatarName;
-            }
-          }
-        }
-
-        WeakController->OnAvatarsDataReceived();
-      })
-      ->Run();
 }
 
 void AAvatarsPlayerController::SetupWhisperWebsockets()
@@ -310,17 +222,21 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
     {
       WeakController->ThinkingTimeout.ClearIfValid(WeakController->GetWorld());
 
-      const bool bWasSent = WeakController->SendUserMessage(Message);
+      FString CleanMessage = Message;
+      CleanMessage.ReplaceInline(TEXT("[FINAL]"), TEXT(""), ESearchCase::IgnoreCase);
+      CleanMessage.TrimStartAndEndInline();
+
+      const bool bWasSent = WeakController->SendUserMessage(CleanMessage);
       AAvatarPawn* Avatar = WeakController->GetSelectedAvatar();
       if (Avatar != nullptr)
       {
         Avatar->SetState(bWasSent ? EAvatarState::Thinking : EAvatarState::Idle);
       }
-    }
 
-    if (WeakController->bShowUserMessage && WeakController->RootWidget != nullptr)
-    {
-      WeakController->RootWidget->ShowUserMessage(Message, FTextHelpers::CalculateReadingTime(Message));
+      if (WeakController->bShowUserMessage && WeakController->RootWidget != nullptr)
+      {
+        WeakController->RootWidget->ShowUserMessage(CleanMessage, FTextHelpers::CalculateReadingTime(CleanMessage));
+      }
     }
   });
 
@@ -505,142 +421,17 @@ void AAvatarsPlayerController::StopDialog()
   Avatar->StopDialog();
 }
 
-AAvatarPawn* AAvatarsPlayerController::SpawnAvatar(TSubclassOf<AAvatarPawn> AvatarClass)
-{
-  FVector Location;
-  FRotator Rotation;
-
-  FActorSpawnParameters SpawnParams;
-  SpawnParams.Owner = this;
-
-  AAvatarPawn* SpawnedAvatar = GetWorld()->SpawnActor<AAvatarPawn>(AvatarClass, Location, Rotation, SpawnParams);
-
-  if (SpawnedAvatar != nullptr)
-  {
-    return SpawnedAvatar;
-  }
-
-  checkNoEntry();
-  return nullptr;
-}
-
-void AAvatarsPlayerController::StartNewConversation(const bool bDisplayAvatarResponse)
-{
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (Avatar == nullptr) return;
-
-  if (Avatar->ApiVersion == EApiVersion::API_v2)
-  {
-    auto PostNewConversationHandle = Api_v2->PostNewConversation(GetLanguageAsIsoString(), Avatar->Id.v2);
-
-    PostNewConversationHandle
-        ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this),
-                bDisplayAvatarResponse](const FPostConversationResponse_v2& Data) mutable {
-          if (ULog::ErrorIf(
-                  !WeakController.IsValid(),
-                  "AvatarsPlayerController this reference is not valid in PostNewConversationHandle lambda in AAvatarsPlayerController"
-              ))
-            return;
-
-          // if (WeakController->bDebug) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Data.ConversationId);
-          WeakController->SetConversationId_v2(Data.ConversationId);
-
-          if (bDisplayAvatarResponse)
-          {
-            WeakController->DisplayAvatarMessage_v2(Data.Message, Data.Propositions);
-            return;
-          }
-
-          if (WeakController->PendingMessages.Num() > 0)
-          {
-            WeakController->SendUserMessage(WeakController->PendingMessages[0]);
-            WeakController->PendingMessages.Empty();
-          }
-        })
-        ->Run();
-
-    return;
-  }
-
-  FString Lan = GetLanguageAsApiString();
-  auto PostNewConversationHandle = Api->PostNewConversation(Lan, Avatar->Id.v1);
-
-  PostNewConversationHandle
-      ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this),
-              bDisplayAvatarResponse](const FPostConversationResponse& Data) mutable {
-        if (ULog::ErrorIf(
-                !WeakController.IsValid(),
-                "AvatarsPlayerController this reference is not valid in PostNewConversationHandle lambda in AAvatarsPlayerController"
-            ))
-          return;
-
-        WeakController->SetConversationId(Data.Conversation.Id);
-        if (Data.Conversation.Messages.Num() == 0)
-        {
-          // verify(false);
-          return;
-        }
-
-        if (bDisplayAvatarResponse)
-        {
-          WeakController->DisplayAvatarMessage(Data.Conversation.Messages[0]);
-          return;
-        }
-
-        if (WeakController->PendingMessages.Num() > 0)
-        {
-          WeakController->SendUserMessage(WeakController->PendingMessages[0]);
-          WeakController->PendingMessages.Empty();
-        }
-      })
-      ->Run();
-}
-
-bool AAvatarsPlayerController::StartedConversation()
-{
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (Avatar == nullptr) return false;
-
-  return Avatar->ApiVersion == EApiVersion::API_v1 && ConversationId != -1 ||
-         Avatar->ApiVersion == EApiVersion::API_v2 && ConversationId_v2 != "";
-}
-
-void AAvatarsPlayerController::DisplayAvatarMessage(FAvatarMessage Message)
-{
-  // if (ULog::ErrorIf(!bShowAvatarMessage, "Tried to display avatar message but the bShowAvatarMessage flag is false")) return;
-
-  Message.AudioPath = Message.AudioPath.Replace(TEXT(".wav"), TEXT(""));
-  // verify(RootWidget != nullptr);
-
-  if (bShowAvatarMessage)
-  {
-    RootWidget->ShowAvatarMessage(Message.Text);
-  }
-  else
-  {
-    RootWidget->HideAvatarMessage(HideUserMessageDelay);
-  }
-
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (Avatar == nullptr) return;
-
-  FString AvatarAssetsPath = GetSelectedAvatarData().AssetsPath;
-  Avatar->PlayDialog(AvatarAssetsPath, Message.AudioPath, GetLanguageAsLocalString());
-
-  RootWidget->ShowPressToTalkMessage();
-}
-
-void AAvatarsPlayerController::DisplayAvatarMessage_v2(FMessage_v2 Message, const TArray<FString>& NewSuggestions)
+void AAvatarsPlayerController::DisplayAvatarMessage(FString Message, FString AudioPath, const TArray<FString>& NewSuggestions)
 {
   // if (ULog::ErrorIf(!bShowAvatarMessage, "Tried to display avatar message but the bShowAvatarMessage flag is false")) return;
   Suggestions = NewSuggestions;
 
-  Message.AudioPath = Message.AudioPath.Replace(TEXT(".wav"), TEXT(""));
+  AudioPath = AudioPath.Replace(TEXT(".wav"), TEXT(""));
   // verify(RootWidget != nullptr);
 
   if (bShowAvatarMessage)
   {
-    RootWidget->ShowAvatarMessage(Message.Text);
+    RootWidget->ShowAvatarMessage(Message);
   }
   else
   {
@@ -654,9 +445,8 @@ void AAvatarsPlayerController::DisplayAvatarMessage_v2(FMessage_v2 Message, cons
   {
     RootWidget->HideSuggestionsText();
   }
-  FString AvatarAssetsPath = GetSelectedAvatarData().AssetsPath;
-  Avatar->PlayDialog(AvatarAssetsPath, Message.AudioPath, GetLanguageAsLocalString());
 
+  Avatar->PlayDialog(Avatar->AvatarData.AssetsPath, AudioPath, GetLanguageAsLocalString());
   RootWidget->HideStatusMessage();
 }
 
@@ -665,61 +455,44 @@ void AAvatarsPlayerController::OnDialogStopped()
   AAvatarPawn* Avatar = GetSelectedAvatar();
   if (Avatar == nullptr || RootWidget == nullptr) return;
 
-  if (Suggestions.Num() > 0 && Avatar->ApiVersion == EApiVersion::API_v2 && Avatar->GetState() == EAvatarState::Idle)
+  if (Suggestions.Num() > 0 && Avatar->GetState() == EAvatarState::Idle)
   {
     RootWidget->SetSuggestionsText(Suggestions);
     RootWidget->ShowSuggestionsText();
   }
 }
 
-void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
+void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
 {
-  if (RootWidget != nullptr)
+  if (SelectedActor == nullptr)
   {
-    RootWidget->HideSuggestionsText();
+    FString Message = "SelectedActor is nullptr in AAvatarsPlayerController::OnCharacterSelection";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
   }
 
-  /* When changing the avatar make sure to set conversation to -1 and start a new one. */
-  ConversationId = -1;
-  ConversationId_v2 = "";
-
-  FAvatarData AvatarData;
-  for (FAvatarData& Data : Avatars)
+  AAvatarPawn* SelectedAvatar = Cast<AAvatarPawn>(SelectedActor);
+  if (SelectedAvatar == nullptr)
   {
-    if (Data.Id == AvatarId)
-    {
-      AvatarData = Data;
-      break;
-    }
+    FString Message = "SelectedAvatar is nullptr in AAvatarsPlayerController::OnCharacterSelection";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
   }
 
-  AAvatarPawn* SelectedAvatar = nullptr;
-
-  TArray<AActor*> SpawnedAvatars;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAvatarPawn::StaticClass(), SpawnedAvatars);
-
-  for (AActor* SpawnedAvatar : SpawnedAvatars)
-  {
-    if (AAvatarPawn* SpawnedAvatarPawn = Cast<AAvatarPawn>(SpawnedAvatar))
-    {
-      if (SpawnedAvatarPawn->Id.AvatarTag == AvatarData.AvatarTag)
-      {
-        SelectedAvatar = SpawnedAvatarPawn;
-        break;
-      }
-    }
-  }
-
-  // if (SelectedAvatar != nullptr && SelectedAvatar->Id == AvatarId)
-  // {
-
-  //   ULog::Warn(TEXT("Selected avatar: " + AvatarData.Name + " found on the map, using existing actor."));
-  //   return;
-  // }
+  // ! When changing the avatar make sure to set conversation to -1 and start a new one.
 
   AAvatarPawn* PreviousAvatar = GetSelectedAvatar();
+  if (PreviousAvatar == SelectedAvatar)
+  {
+    FString Message = "Selected the same avatar as the current one.";
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
+    return;
+  }
+
   if (PreviousAvatar != nullptr)
   {
+    SelectedAvatar->IntellectComponent->OnAiResponseEvent.RemoveDynamic(this, &AAvatarsPlayerController::DisplayAvatarMessage);
     PreviousAvatar->AudioComponent->OnAudioFinished.RemoveDynamic(this, &AAvatarsPlayerController::OnDialogStopped);
     PreviousAvatar->OnAvatarStateChangeEvent.RemoveDynamic(this, &AAvatarsPlayerController::OnAvatarStateChanged);
     PreviousAvatar->StopDialog();
@@ -727,29 +500,17 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
     UnPossess();
   }
 
-  if (SelectedAvatar == nullptr)
+  if (RootWidget != nullptr)
   {
-    SelectedAvatar = SpawnAvatar(AvatarData.AvatarClass);
-    if (bDebug)
-    {
-      GEngine->AddOnScreenDebugMessage(
-          -1, 10.f, FColor::Yellow, *("Selected avatar: " + AvatarData.Name + " not found on the map, spawning new actor.")
-      );
-    }
+    RootWidget->HideSuggestionsText();
   }
 
-  SelectedAvatar->ApiVersion = AvatarData.ApiVersion;
-  SelectedAvatar->Id = AvatarData.Id;
   if (bDebug)
   {
-    GEngine->AddOnScreenDebugMessage(
-        -1,
-        10.f,
-        FColor::Yellow,
-        *("Selected avatar: " + AvatarData.Name + ", API version: " + (AvatarData.ApiVersion == EApiVersion::API_v2 ? "API v2" : "API v1"))
-    );
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name));
   }
 
+  SelectedAvatar->IntellectComponent->OnAiResponseEvent.AddDynamic(this, &AAvatarsPlayerController::DisplayAvatarMessage);
   // Just in case make sure that these handlers are not bound
   SelectedAvatar->AudioComponent->OnAudioFinished.RemoveDynamic(this, &AAvatarsPlayerController::OnDialogStopped);
   SelectedAvatar->OnAvatarStateChangeEvent.RemoveDynamic(this, &AAvatarsPlayerController::OnAvatarStateChanged);
@@ -762,7 +523,8 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
 
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
   {
-    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(SelectedAvatar->Id.v2);
+    // ! check persistance across all app!! some settings are not saved or not retrieved
+    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(SelectedAvatar->AvatarData.Name);
     SelectedAvatar->ApplySettings(Settings);
   }
   Possess(SelectedAvatar);
@@ -771,13 +533,13 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
   if (!bHasCustomCamera && bDebug)
   {
     GEngine->AddOnScreenDebugMessage(
-        -1, 10.f, FColor::Yellow, *("Selected avatar: " + AvatarData.Name + " does not specify its own camera")
+        -1, 10.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera")
     );
   }
 
   if (RootWidget != nullptr)
   {
-    RootWidget->SelectThumbnail(SelectedAvatar->Id);
+    RootWidget->SelectThumbnail(SelectedAvatar);
   }
 
   ChangeAvatarTimeout.ClearIfValid(GetWorld());
@@ -809,23 +571,23 @@ void AAvatarsPlayerController::OnCharacterSelection(const FAvatarId& AvatarId)
   }
 }
 
-FAvatarData AAvatarsPlayerController::GetNextAvatar()
+AAvatarPawn* AAvatarsPlayerController::GetNextAvatar()
 {
-  FAvatarData AvatarData;
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (Avatar == nullptr)
+  FAiIdentity AvatarData;
+  AAvatarPawn* SelectedAvatar = GetSelectedAvatar();
+  if (SelectedAvatar == nullptr)
   {
     checkNoEntry();
-    return AvatarData;
+    return nullptr;
   }
 
   int32 Index = -1;
-  int32 Count = Avatars.Num();
+  int32 Count = SpawnedAvatars.Num();
 
   for (int32 i = 0; i < Count; i++)
   {
-    FAvatarData& Data = Avatars[i];
-    if (Data.Id == Avatar->Id)
+    AAvatarPawn* NextAvatar = SpawnedAvatars[i];
+    if (NextAvatar != nullptr && NextAvatar->AvatarData.Name == SelectedAvatar->AvatarData.Name)
     {
       Index = i;
       break;
@@ -838,7 +600,7 @@ FAvatarData AAvatarsPlayerController::GetNextAvatar()
   }
 
   Index = (Index + 1) % Count; // Wrap around using modulo
-  return Avatars[Index];
+  return SpawnedAvatars[Index];
 }
 
 void AAvatarsPlayerController::StartChangeAvatarTimeout()
@@ -870,8 +632,18 @@ void AAvatarsPlayerController::OnAvatarChangeTimeout()
   };
 
   ChangeAvatarTimeout.ClearIfValid(GetWorld());
-  FAvatarData Data = GetNextAvatar();
-  OnCharacterSelection(Data.Id);
+
+  AAvatarPawn* NextAvatar = GetNextAvatar();
+  if (NextAvatar == nullptr)
+  {
+    FString Message = "NextAvatar is nullptr in AAvatarsPlayerController::OnAvatarChangeTimeout";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+    checkNoEntry();
+    return;
+  }
+
+  OnCharacterSelection(NextAvatar);
 }
 
 void AAvatarsPlayerController::StartGreetingTimeout()
@@ -952,12 +724,6 @@ AAvatarPawn* AAvatarsPlayerController::GetSelectedAvatar() const
   return Avatar;
 }
 
-const FAvatarId& AAvatarsPlayerController::GetSelectedAvatarId() const
-{
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  return Avatar->Id;
-}
-
 // ! switch this back to structure reference
 bool AAvatarsPlayerController::GetActiveAvatarState(EAvatarState& OutState)
 {
@@ -988,20 +754,6 @@ void AAvatarsPlayerController::OnAvatarStateChanged(EAvatarState OldState, EAvat
   }
 }
 
-FAvatarData& AAvatarsPlayerController::GetSelectedAvatarData()
-{
-  AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (!Avatar) return Avatars[0];
-
-  for (FAvatarData& AvatarData : Avatars)
-  {
-    if (AvatarData.Id == Avatar->Id) return AvatarData;
-  }
-
-  checkNoEntry();
-  return Avatars[0];
-}
-
 void AAvatarsPlayerController::SetAvatarState(EAvatarState State)
 {
   AAvatarPawn* Avatar = GetSelectedAvatar();
@@ -1014,46 +766,20 @@ void AAvatarsPlayerController::SetAvatarState(EAvatarState State)
   RootWidget->SetStateMessage(State);
 }
 
-const FAvatarData& AAvatarsPlayerController::GetDefaultAvatarData() const
+AAvatarPawn* AAvatarsPlayerController::GetDefaultAvatar() const
 {
-  for (const FAvatarData& Data : Avatars)
+  if (SpawnedAvatars.Num() == 0)
   {
-    if (Data.AvatarTag == DefaultAvatar) return Data;
+    checkNoEntry();
+    return nullptr;
   }
 
-  checkNoEntry();
-  static FAvatarData EmptyAvatarData;
-  return EmptyAvatarData;
-}
-
-void AAvatarsPlayerController::OnAvatarsDataReceived()
-{
-  if (!this->bApiDone)
+  for (TObjectPtr<AAvatarPawn> Avatar : SpawnedAvatars)
   {
-    this->bApiDone = true;
-    return;
+    if (Avatar->bIsDefault) return Avatar;
   }
 
-  if (ULog::ErrorIf(Avatars.Num() == 0, "No avatars data received")) return;
-
-  if (RootWidget != nullptr)
-  {
-    RootWidget->CreateAvatarsThumbnails(Avatars);
-  }
-
-  FAvatarData Default = GetDefaultAvatarData();
-  OnCharacterSelection(Default.Id);
-  ScheduleHideLoadingScreen();
-}
-
-void AAvatarsPlayerController::SetConversationId(int32 Id)
-{
-  ConversationId = Id;
-}
-
-void AAvatarsPlayerController::SetConversationId_v2(FString Id)
-{
-  ConversationId_v2 = Id;
+  return SpawnedAvatars[0];
 }
 
 bool AAvatarsPlayerController::IsExcludedPhrase(const FString Phrase)
@@ -1070,18 +796,26 @@ bool AAvatarsPlayerController::IsExcludedPhrase(const FString Phrase)
 
 bool AAvatarsPlayerController::SendUserMessage(FString Message)
 {
-  if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("User message to send: " + Message));
 
   if (Message.Contains("[FINAL]"))
   {
     Message.ReplaceInline(TEXT("[FINAL]"), TEXT(""), ESearchCase::IgnoreCase);
   }
 
+  if (bDebug)
+  {
+    FString DebugMessage = "User past message: " + Message;
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, DebugMessage);
+    UE_LOG(LogTemp, Display, TEXT("%s"), *DebugMessage);
+  }
+
   if (IsExcludedPhrase(Message))
   {
     if (bDebug)
     {
-      ULog::Error("Detected excluded phrase in user message: " + Message);
+      FString DebugMessage = "Detected excluded phrase in user message: " + Message;
+      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, DebugMessage);
+      UE_LOG(LogTemp, Display, TEXT("%s"), *DebugMessage);
     }
     return false;
   }
@@ -1095,7 +829,13 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
   }
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
-  if (!Avatar) return false;
+  if (!Avatar)
+  {
+    FString ErrorMessage = "Could not get reference to AAvatarPawn* Avatar in AAvatarsPlayerController::SendUserMessage";
+    UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessage);
+    return false;
+  }
 
   // Make sure that new message from user will reset avatar change timeout.
   ChangeAvatarTimeout.ClearIfValid(GetWorld());
@@ -1111,59 +851,7 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
     StartGreetingTimeout();
   }
 
-  // The sole reason for saving a message as pending is to avoid sending it before the conversation is started.
-  // There should be no other reason to save a message as pending.
-  if (Avatar->ApiVersion == EApiVersion::API_v1 && ConversationId == -1 ||
-      Avatar->ApiVersion == EApiVersion::API_v2 && ConversationId_v2 == "")
-  {
-
-    if (bDebug)
-    {
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::SanitizeFloat((float)ConversationId));
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *ConversationId_v2);
-    }
-
-    PendingMessages.Add(Message);
-    StartNewConversation(Avatar->ApiVersion == EApiVersion::API_v2);
-    return false;
-  }
-
-  if (Avatar->ApiVersion == EApiVersion::API_v2)
-  {
-    if (ULog::ErrorIf(Api_v2 == nullptr, "Api_v2 is nullptr")) return false;
-
-    Api_v2->PostUserMessage(Message, ConversationId_v2)
-        ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](const FPostUserMessageResponse_v2& Response) {
-          if (ULog::ErrorIf(
-                  !WeakController.IsValid(),
-                  "AvatarsPlayerController this reference is not valid in AAvatarsPlayerController::SendUserMessage > "
-                  "Api->PostUserMessage "
-                  "lambda"
-              ))
-            return;
-
-          WeakController->DisplayAvatarMessage_v2(Response.Message, Response.Propositions);
-        })
-        ->Run();
-
-    return true;
-  }
-
-  if (ULog::ErrorIf(Api == nullptr, "Api is nullptr")) return false;
-  Api->PostUserMessage(Message, ConversationId)
-      ->Then([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](const FPostUserMessageResponse& Response) {
-        if (ULog::ErrorIf(
-                !WeakController.IsValid(),
-                "AvatarsPlayerController this reference is not valid in AAvatarsPlayerController::SendUserMessage > Api->PostUserMessage "
-                "lambda"
-            ))
-          return;
-
-        WeakController->DisplayAvatarMessage(Response.Message);
-      })
-      ->Run();
-
-  return true;
+  return Avatar->IntellectComponent->RespondTo(Message, GetLanguageAsIsoString());
 }
 
 void AAvatarsPlayerController::OnAnyKey()

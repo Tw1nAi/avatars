@@ -32,34 +32,3 @@ enum class EAvatarState : uint8
   // Speaking to the user, e.g. playing the audio and animation response
   Talking
 };
-
-UENUM(BlueprintType)
-enum class EApiVersion : uint8
-{
-  None UMETA(DisplayName = "None"),
-  API_v1 UMETA(DisplayName = "API v1"),
-  API_v2 UMETA(DisplayName = "API v2")
-};
-
-USTRUCT(BlueprintType, Blueprintable)
-struct FAvatarId
-{
-  GENERATED_BODY()
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  uint8 v1 = 0;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString v2 = "";
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  EAvatarCharacter AvatarTag = EAvatarCharacter::None;
-
-  bool IsValid() { return v1 > 0 && !v2.IsEmpty() && AvatarTag != EAvatarCharacter::None; }
-
-  // Overloading the equality operator
-  bool operator==(const FAvatarId& Other) const { return v1 == Other.v1 && v2 == Other.v2 && AvatarTag == Other.AvatarTag; }
-
-  // It's also a good practice to implement the inequality operator
-  bool operator!=(const FAvatarId& Other) const { return !(*this == Other); }
-};

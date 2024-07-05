@@ -57,7 +57,7 @@ FReply UCharacterThumbnailWidget::NativeOnMouseButtonDown(const FGeometry& InGeo
 
   if (OnClickEvent.IsBound())
   {
-    OnClickEvent.Broadcast(AvatarId);
+    OnClickEvent.Broadcast(Avatar);
   }
 
   return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);

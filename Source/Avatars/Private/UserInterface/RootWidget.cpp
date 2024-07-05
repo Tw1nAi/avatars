@@ -7,6 +7,7 @@
 #include "Engine/GameViewportClient.h"
 #include "Slate/SceneViewport.h"
 
+#include "AiIdentityInterface.h"
 #include "AvatarsPlayerController.h"
 #include "Get.h"
 #include "Log.h"
@@ -232,7 +233,8 @@ void URootWidget::StartNewConversation()
 {
   if (GetController())
   {
-    PlayerController->StartNewConversation(true);
+    checkNoEntry();
+    // PlayerController->StartNewConversation(true);
   }
 }
 
@@ -405,40 +407,54 @@ void URootWidget::HideAvatarMessage(const float Delay)
   AvatarMessage->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void URootWidget::SelectThumbnail(const FAvatarId& Id)
+void URootWidget::SelectThumbnail(AActor* SelectedAvatar)
 {
+  IAiIdentityInterface* SelectedWithIdentity = Cast<IAiIdentityInterface>(SelectedAvatar);
+  if (SelectedWithIdentity == nullptr)
+  {
+    FString Message = FString::Printf(TEXT("SelectedAvatar is not IAiIdentityInterface: %s"), *SelectedAvatar->GetName());
+    UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+    return;
+  }
+
   for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
   {
-    Thumb->UpdateSelectionNative(Thumb->AvatarId == Id);
+    IAiIdentityInterface* ThumbWithIdentity = Cast<IAiIdentityInterface>(Thumb->Avatar);
+    if (ThumbWithIdentity == nullptr)
+    {
+      FString Message = FString::Printf(TEXT("Thumb->Avatar is not IAiIdentityInterface: %s"), *Thumb->Avatar->GetName());
+      UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+      continue;
+    }
+    Thumb->UpdateSelectionNative(ThumbWithIdentity->GetIdentity().Name == SelectedWithIdentity->GetIdentity().Name);
   }
 }
 
-void URootWidget::OnCharacterThumbnailClick(const FAvatarId& Id)
+void URootWidget::OnCharacterThumbnailClick(AActor* SelectedAvatar)
 {
-  SelectThumbnail(Id);
+  SelectThumbnail(SelectedAvatar);
 
   if (OnCharacterThumbnailClickEvent.IsBound())
   {
-    OnCharacterThumbnailClickEvent.Broadcast(Id);
+    OnCharacterThumbnailClickEvent.Broadcast(SelectedAvatar);
   }
 }
 
-void URootWidget::CreateAvatarsThumbnails(TArray<FAvatarData> AvatarsData)
+void URootWidget::CreateAvatarsThumbnails(TArray<AAvatarPawn*> SpawnedAvatars)
 {
   if (ULog::ErrorIf(AvatarsThumbnails.Num() == 0, TEXT("No AvatarsThumbnails"))) return;
 
-  for (UCharacterThumbnailWidget* ThumbWidget : AvatarsThumbnails)
+  for (int32 i = 0; i < SpawnedAvatars.Num(); i++)
   {
-    for (FAvatarData& Avatar : AvatarsData)
+    AAvatarPawn* Avatar = SpawnedAvatars[i];
+    UCharacterThumbnailWidget* ThumbWidget = AvatarsThumbnails[i];
+    if (Avatar != nullptr && ThumbWidget != nullptr)
     {
-      if (ThumbWidget->CharacterName == Avatar.Name)
-      {
-        ThumbWidget->AvatarId = Avatar.Id;
-        ThumbWidget->CharacterName = Avatar.Name;
-        ThumbWidget->UpdateImage(Avatar.ThumbnailImage);
-        ThumbWidget->OnClickEvent.AddUObject(this, &URootWidget::OnCharacterThumbnailClick);
-        ThumbWidget->UpdateSelectionNative(ThumbWidget->AvatarId == Avatar.Id);
-      }
+      ThumbWidget->Avatar = Avatar;
+      ThumbWidget->UpdateImage(Avatar->AvatarData.ThumbnailImage);
+      ThumbWidget->OnClickEvent.AddUObject(this, &URootWidget::OnCharacterThumbnailClick);
     }
   }
 }

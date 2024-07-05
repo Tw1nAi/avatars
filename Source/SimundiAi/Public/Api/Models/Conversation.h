@@ -4,55 +4,14 @@
 
 #include "CoreMinimal.h"
 
-#include "Conversation_v2.generated.h"
-
-// USTRUCT(Blueprintable, BlueprintType)
-// struct FConversation_v2
-// {
-//   GENERATED_USTRUCT_BODY()
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   int32 Id;
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   FString Avatar;
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   uint8 AvatarId;
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   FString DateCreated;
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   FString DateUpdated;
-
-//   /* Possible values: pol, eng. */
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   FString Lang;
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   TArray<FAvatarMessage> Messages;
-
-//   /* Possible values: finished, in progress. */
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   FString Status;
-// };
-
-// USTRUCT(Blueprintable, BlueprintType)
-// struct FGetConversationsResponse_v2
-// {
-//   GENERATED_USTRUCT_BODY()
-
-//   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-//   TArray<FConversation> Conversations;
-// };
+#include "Conversation.generated.h"
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FPostConversationPayload_v2
+struct FPostConversationPayload
 {
   GENERATED_USTRUCT_BODY()
 
-  FPostConversationPayload_v2(
+  FPostConversationPayload(
       FString LanguageISO = "pl",
       FString AvatarId = "",
       bool ReturnConversation = true,
@@ -87,7 +46,7 @@ struct FPostConversationPayload_v2
 };
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FMessage_v2
+struct FMessage
 {
   GENERATED_USTRUCT_BODY()
 
@@ -111,7 +70,7 @@ struct FMessage_v2
 };
 
 USTRUCT(Blueprintable, BlueprintType)
-struct FPostConversationResponse_v2
+struct FPostConversationResponse
 {
   GENERATED_USTRUCT_BODY()
 
@@ -119,7 +78,7 @@ struct FPostConversationResponse_v2
   FString ConversationId;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FMessage_v2 Message;
+  FMessage Message;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FString> Propositions;

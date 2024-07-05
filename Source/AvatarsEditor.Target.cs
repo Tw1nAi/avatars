@@ -14,7 +14,9 @@ public class AvatarsEditorTarget : TargetRules
         ExtraModuleNames.Add("AiIntellect");
         ExtraModuleNames.Add("RestApi");
         ExtraModuleNames.Add("WebsocketAudioStream");
-    ExtraModuleNames.Add("JsonHelpers");
+        ExtraModuleNames.Add("JsonHelpers");
+        ExtraModuleNames.Add("SimundiAi");
+    ExtraModuleNames.Add("AiIdentity");
         ExtraModuleNames.AddRange(new string[] { "Avatars" });
     }
 }

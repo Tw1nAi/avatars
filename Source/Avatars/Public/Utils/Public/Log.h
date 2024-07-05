@@ -56,19 +56,19 @@ public:
    * Displays an error message.
    *
    * @param ErrorMessage The error message to display.
-   * @param bLogStack Whether to log the call stack along with the error message. Default is true.
+   * @param bLogStack Whether to log the call stack along with the error message. Default is false.
    * @param Duration The duration in seconds for which the message should be displayed. Default is 10 seconds.
    */
-  static void Error(const FString ErrorMessage, const bool bLogStack = true, const float Duration = 10.f);
+  static void Error(const FString ErrorMessage, const bool bLogStack = false, const float Duration = 10.f);
 
   /**
    * Displays an error message if a condition is true.
    *
    * @param bCondition The condition to check.
    * @param ErrorMessage The error message to display.
-   * @param bLogStack Whether to log the call stack along with the error message. Default is true.
+   * @param bLogStack Whether to log the call stack along with the error message. Default is false.
    * @param Duration The duration in seconds for which the message should be displayed. Default is 10 seconds.
    * @return True if the error was thrown, false otherwise.
    */
-  static bool ErrorIf(const bool bCondition, const FString ErrorMessage, const bool bLogStack = true, const float Duration = 10.f);
+  static bool ErrorIf(const bool bCondition, const FString ErrorMessage, const bool bLogStack = false, const float Duration = 10.f);
 };

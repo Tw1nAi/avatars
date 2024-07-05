@@ -23,7 +23,7 @@
 
 #include "RootWidget.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterThumbnailClickDelegate, const FAvatarId&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterThumbnailClickDelegate, AActor*);
 
 class AAvatarsPlayerController;
 class FDelegateHandle;
@@ -185,13 +185,13 @@ public:
   void ShowPressToTalkMessage();
 
   UFUNCTION(BlueprintCallable)
-  void SelectThumbnail(const FAvatarId& Id);
+  void SelectThumbnail(AActor* SelectedAvatar);
 
   UFUNCTION(BlueprintCallable)
-  void OnCharacterThumbnailClick(const FAvatarId& Id);
+  void OnCharacterThumbnailClick(AActor* SelectedAvatar);
 
   UFUNCTION(BlueprintCallable)
-  void CreateAvatarsThumbnails(TArray<FAvatarData> AvatarsData);
+  void CreateAvatarsThumbnails(TArray<AAvatarPawn*> SpawnedAvatars);
 
   UFUNCTION(BlueprintCallable, BlueprintPure)
   EAvatarLanguage GetAvatarLanguage();
