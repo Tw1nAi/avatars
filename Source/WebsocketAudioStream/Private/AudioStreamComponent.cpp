@@ -1,8 +1,10 @@
 #include "AudioStreamComponent.h"
 
 #include "Async/Async.h"
+#include "AudioCaptureCore.h"
 #include "AudioDeviceManager.h"
 #include "AudioMixerDevice.h"
+#include "DSP/Dsp.h"
 #include "WebSocketsModule.h"
 
 DEFINE_LOG_CATEGORY(LogAudioStreamComponent);
@@ -14,7 +16,6 @@ UAudioStreamComponent::UAudioStreamComponent()
   bShouldRun = false;
   bIsPaused = false;
   ChunkSize = 1024;
-  SampleRate = 16000;
 }
 
 void UAudioStreamComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -32,12 +33,39 @@ void UAudioStreamComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
   Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
+void UAudioStreamComponent::GetDefaultAudioCaptureDeviceInfo()
+{
+  Audio::FCaptureDeviceInfo DeviceInfo;
+  Audio::FAudioCaptureSynth SynthAudioCapture;
+
+  if (SynthAudioCapture.GetDefaultCaptureDeviceInfo(DeviceInfo))
+  {
+    SampleRate = DeviceInfo.PreferredSampleRate;
+    NumberOfChannels = DeviceInfo.InputChannels;
+    UE_LOG(
+        LogAudioStreamComponent,
+        Log,
+        TEXT("Default audio device: %s, Sample Rate: %d, Channels: %d"),
+        *DeviceInfo.DeviceName,
+        SampleRate,
+        NumberOfChannels
+    );
+  }
+  else
+  {
+    // Fallback to default values if no devices are found
+    SampleRate = TargetSampleRate;
+    NumberOfChannels = TargetNumberOfChannels;
+    UE_LOG(LogAudioStreamComponent, Warning, TEXT("Failed to get default audio device info. Using fallback values."));
+  }
+}
+
 void UAudioStreamComponent::OnAudioGenerate(const float* InAudio, int32 NumSamples)
 {
   AudioBuffer.Append(InAudio, NumSamples);
 }
 
-void UAudioStreamComponent::StartAudioStream()
+bool UAudioStreamComponent::SetupWebsocket()
 {
   FString Url = WebsocketServerProtocol + "://" + WebsocketServerURL + ":" + WebsocketPort + "/";
   Socket = FWebSocketsModule::Get().CreateWebSocket(Url, WebsocketServerProtocol);
@@ -45,7 +73,7 @@ void UAudioStreamComponent::StartAudioStream()
   if (!Socket.IsValid())
   {
     if (bDebug) UE_LOG(LogAudioStreamComponent, Error, TEXT("Failed to create a websocket connection."));
-    return;
+    return false;
   }
 
   Socket->OnConnected().AddLambda([this]() {
@@ -63,7 +91,28 @@ void UAudioStreamComponent::StartAudioStream()
   });
   Socket->Connect();
 
+  return true;
+}
+
+void UAudioStreamComponent::StartAudioStream()
+{
+  if (!SetupWebsocket())
+  {
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("[ERROR] Failed to setup websocket connection."));
+    return;
+  }
+
+  GetDefaultAudioCaptureDeviceInfo();
+  UE_LOG(LogAudioStreamComponent, Display, TEXT("Device Sample Rate: %d, Device Num Channels: %d"), SampleRate, NumberOfChannels);
+
   AudioCapture = NewObject<UCustomAudioCapture>();
+  if (!AudioCapture)
+  {
+    FString Message = FString::Printf(TEXT("Failed to create a new audio capture object."));
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    return;
+  }
 
   if (bOpenDefaultStream && !AudioCapture->OpenDefaultAudioStream())
   {
@@ -76,11 +125,14 @@ void UAudioStreamComponent::StartAudioStream()
   AudioCapture->AddGeneratorDelegate(OnAudioGenerateDelegate);
 
   Audio::FAudioCaptureDeviceParams Params;
+  Params.DeviceIndex = DeviceIndex < 0 ? INDEX_NONE : DeviceIndex;
   Params.SampleRate = SampleRate;
   Params.NumInputChannels = NumberOfChannels;
   if (!AudioCapture->OpenCustomAudioStream(Params))
   {
-    UE_LOG(LogAudioStreamComponent, Error, TEXT("Failed to open a default audio stream to the audio capture device."));
+    FString Message = FString::Printf(TEXT("Failed to open a custom audio stream to the audio capture device."));
+    UE_LOG(LogAudioStreamComponent, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
   AudioCapture->StartCapturingAudio();

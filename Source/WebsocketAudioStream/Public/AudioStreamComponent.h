@@ -79,12 +79,20 @@ public:
   int32 ChunkSize = 1024;
 
   /* The target sample rate of audio input stream and websocket compressed data. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Stream")
+  UPROPERTY()
   int32 SampleRate = 16000;
 
-  /* The target number of channles of audio input stream and websocket compressed data. */
+  /* Sample rate required by websocket server. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Stream")
+  int32 TargetSampleRate = 16000;
+
+  /* The target number of channles of audio input stream and websocket compressed data. */
+  UPROPERTY()
   int32 NumberOfChannels = 1;
+
+  /* Number of channels required by the server.. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Stream")
+  int32 TargetNumberOfChannels = 1;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio Stream|Websocket")
   FString WebsocketServerProtocol = TEXT("ws");
@@ -113,4 +121,7 @@ private:
   TSharedPtr<IWebSocket> Socket;
   void Send(const TArray<uint8>& Data);
   FOnAudioGenerate OnAudioGenerateDelegate;
+
+  void GetDefaultAudioCaptureDeviceInfo();
+  bool SetupWebsocket();
 };
