@@ -125,7 +125,7 @@ void UAudioStreamComponent::StartAudioStream()
   AudioCapture->AddGeneratorDelegate(OnAudioGenerateDelegate);
 
   Audio::FAudioCaptureDeviceParams Params;
-  Params.DeviceIndex = DeviceIndex < 0 ? INDEX_NONE : DeviceIndex;
+  Params.DeviceIndex = INDEX_NONE;
   Params.SampleRate = SampleRate;
   Params.NumInputChannels = NumberOfChannels;
   if (!AudioCapture->OpenCustomAudioStream(Params))
