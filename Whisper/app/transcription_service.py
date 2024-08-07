@@ -1,6 +1,4 @@
-import logging
 import os
-import platform
 import re as regex
 import threading
 import time
@@ -8,11 +6,8 @@ from enum import Enum
 from typing import List
 
 import numpy
-import pyaudio
-import pyautogui
-import pyperclip
+# import pyaudio
 import torch
-
 from custom_logger import error, info, warn
 from transcriber import WhisperModel
 
@@ -121,16 +116,16 @@ class TranscriptionService:
         especially after some data has been removed. """
         self.frames_offset = 0.0
 
-        """ Capturing audio stream """
-        self.pyaudio_instance = pyaudio.PyAudio()
-        self.chunk = 1024
-        self.stream = self.pyaudio_instance.open(
-            format = pyaudio.paInt16,
-            channels = 1,
-            rate = self.rate,
-            input = True,
-            frames_per_buffer = self.chunk
-        )
+        # """ Capturing audio stream """
+        # self.pyaudio_instance = pyaudio.PyAudio()
+        # self.chunk = 1024
+        # self.stream = self.pyaudio_instance.open(
+        #     format = pyaudio.paInt16,
+        #     channels = 1,
+        #     rate = self.rate,
+        #     input = True,
+        #     frames_per_buffer = self.chunk
+        # )
 
         """ Application settings """
         self.exit_flag = threading.Event()
@@ -191,20 +186,10 @@ class TranscriptionService:
 
         return False
 
-    # use this to print the transcription right into the input box enywhere in the system
-    # ! add option to clear content of the current input box
-    def print_to_clipboard(self, text):
-        pyperclip.copy(text)
-
-        if platform.system() == "Darwin":
-            pyautogui.hotkey("command", "v")
-        else:
-            pyautogui.hotkey("ctrl", "v")
-
     def cleanup(self):
         self.exit_flag.set()
-        self.stream.close()
-        self.pyaudio_instance.terminate()
+        # self.stream.close()
+        # self.pyaudio_instance.terminate()
         if self.audio_stream_thread is not None: self.audio_stream_thread.join()
         if self.transcription_thread is not None: self.transcription_thread.join()
 

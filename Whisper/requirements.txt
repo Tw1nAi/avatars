@@ -15,4 +15,3 @@ evaluate
 numpy
 pyaudio
 levenshtein
-pyautogui

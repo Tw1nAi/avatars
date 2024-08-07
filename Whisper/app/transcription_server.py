@@ -4,10 +4,8 @@ import time
 from enum import Enum
 
 import numpy
-import websockets
-from websockets.sync.server import serve
-
 from custom_logger import error, info, warn
+from websockets.sync.server import serve
 
 
 class ServerEvent(Enum):

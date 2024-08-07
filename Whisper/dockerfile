@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     git --fix-missing \
     bzip2 --fix-missing \
     libx11-6 --fix-missing \
+    dos2unix \
  && rm -rf /var/lib/apt/lists/*
 
 RUN apt update
@@ -35,11 +36,16 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY setup.sh /app
+# Convert line endings
+RUN dos2unix /app/setup.sh
 RUN bash setup.sh
 
 COPY requirements.txt /app
 RUN pip install -r requirements.txt
 
-COPY server.py /app
-COPY transcriber.py /app
-CMD ["python", "server.py"]
+COPY app/custom_logger.py /app
+COPY app/run.py /app
+COPY app/transcriber.py /app
+COPY app/transcription_server.py /app
+COPY app/transcription_service.py /app
+CMD ["python", "run.py"]

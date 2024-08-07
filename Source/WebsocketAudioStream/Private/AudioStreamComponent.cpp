@@ -102,8 +102,11 @@ void UAudioStreamComponent::StartAudioStream()
     return;
   }
 
-  GetDefaultAudioCaptureDeviceInfo();
-  UE_LOG(LogAudioStreamComponent, Display, TEXT("Device Sample Rate: %d, Device Num Channels: %d"), SampleRate, NumberOfChannels);
+  if (bTryToGetDefaultDeviceInfo)
+  {
+    GetDefaultAudioCaptureDeviceInfo();
+    UE_LOG(LogAudioStreamComponent, Display, TEXT("Device Sample Rate: %d, Device Num Channels: %d"), SampleRate, NumberOfChannels);
+  }
 
   AudioCapture = NewObject<UCustomAudioCapture>();
   if (!AudioCapture)
@@ -130,7 +133,13 @@ void UAudioStreamComponent::StartAudioStream()
   Params.NumInputChannels = NumberOfChannels;
   if (!AudioCapture->OpenCustomAudioStream(Params))
   {
-    FString Message = FString::Printf(TEXT("Failed to open a custom audio stream to the audio capture device."));
+    FString Message = FString::Printf(
+        TEXT("Failed to open a custom audio stream to the audio capture device with params: Sample Rate: %d, Num Channels: %d, Device "
+             "Index: %d"),
+        SampleRate,
+        NumberOfChannels,
+        Params.DeviceIndex
+    );
     UE_LOG(LogAudioStreamComponent, Error, TEXT("%s"), *Message);
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
@@ -191,14 +200,14 @@ void UAudioStreamComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
   UE_LOG(
       LogAudioStreamComponentTick,
-      Verbose,
+      VeryVerbose,
       TEXT("AudioBuffer.Num() >= ChunkSize: %s"),
       AudioBuffer.Num() >= ChunkSize ? TEXT("true") : TEXT("false")
   );
   UE_LOG(LogAudioStreamComponentTick, Verbose, TEXT("Socket.IsValid(): %s"), Socket && Socket.IsValid() ? TEXT("true") : TEXT("false"));
   UE_LOG(
       LogAudioStreamComponentTick,
-      Verbose,
+      VeryVerbose,
       TEXT("Socket->IsConnected(): %s"),
       Socket && Socket->IsConnected() ? TEXT("true") : TEXT("false")
   );

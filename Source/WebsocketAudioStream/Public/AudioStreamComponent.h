@@ -55,6 +55,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   bool bOpenDefaultStream;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bTryToGetDefaultDeviceInfo;
+
   UFUNCTION(BlueprintCallable, Category = "Audio Stream")
   void StartAudioStream();
 
