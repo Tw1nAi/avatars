@@ -76,6 +76,15 @@ and to load it on any system:
 docker load -i custom-whisper.tar
 ```
 
+You can compress the image file to save space and reduce transfer time:
+```
+docker save custom-whisper | gzip >custom-whisper.tar.gz
+```
+and load the compressed image:
+```
+gunzip -c custom-whisper.tar.gz | docker load
+```
+
 # Known issues
 
 In case local server would not run with GPU (which is favored way, since its way faster) reinstall your torch to the latest version.
