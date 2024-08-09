@@ -9,6 +9,7 @@
 
 #include "AiIdentityInterface.h"
 #include "AvatarsTypes.h"
+#include "Dialogs/MultiPartDialog.h"
 #include "Settings/Settings.h"
 
 #include "AvatarPawn.generated.h"
@@ -25,7 +26,9 @@ class USoundWave;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarStateChangeSignature, EAvatarState, OldState, EAvatarState, NewState);
 
-UCLASS()
+/* Avatar pawn is a base class for all avatars in the game. It provides basic functionality for managing avatar's state, camera and dialog.
+ */
+UCLASS(Blueprintable, BlueprintType)
 class AVATARS_API AAvatarPawn : public APawn, public IAiIdentityInterface
 {
   GENERATED_BODY()
@@ -127,13 +130,16 @@ public:
   void PlayDialogFaceAnimation(UAnimSequence* FaceAnimation);
 
   UFUNCTION(BlueprintCallable)
-  void PlayDialog(const FString Path, const FString AssetName, FString LanguageString);
+  void PlayDialog(const FString Path, const FString AssetName, FString LanguageString, const bool bIsMultiPartDialog = false);
 
   UFUNCTION(BlueprintCallable)
   void StopDialog();
 
   UFUNCTION(BlueprintCallable)
   void OnAudioFinishedPlaying();
+
+  UPROPERTY()
+  FMultiPartDialog MultiPartDialog;
 
   /* Maximum offset allowed for user to make. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")

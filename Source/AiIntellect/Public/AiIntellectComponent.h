@@ -9,8 +9,8 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogAiIntellect, Display, All);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
-    FAiResponseSignature, FString, Message, FString, AudioPath, const TArray<FString>&, NewSuggestions
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
+    FAiResponseSignature, FString, Message, FString, AudioPath, const TArray<FString>&, NewSuggestions, const TArray<FString>&, Tags
 );
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent)) class AIINTELLECT_API UAiIntellectComponent : public UActorComponent

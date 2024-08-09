@@ -135,9 +135,15 @@ bool USimundiIntellectComponent::RespondTo(const FString& Message, const FString
           return;
         }
 
+        FString NumberOfMessageTags = FString::Printf(TEXT("Message has %d tags."), Response.Message.Tags.Num());
+        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, NumberOfMessageTags);
+        UE_LOG(LogSimundiIntellect, Display, TEXT("%s"), *NumberOfMessageTags);
+
         if (this->OnAiResponseEvent.IsBound())
         {
-          this->OnAiResponseEvent.Broadcast(Response.Message.Text, Response.Message.AudioPath, Response.Propositions);
+          this->OnAiResponseEvent.Broadcast(
+              Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags
+          );
         }
       })
       ->Run();

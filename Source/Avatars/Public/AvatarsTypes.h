@@ -23,12 +23,14 @@ enum class EAvatarLanguage : uint8
 UENUM(BlueprintType)
 enum class EAvatarState : uint8
 {
-  // Default state, no user input
+  // Default state, no user input.
   Idle,
-  // Listening to user input, e.g. recording audio
+  // Listening to user input, e.g. capturing or recording audio.
   Listening,
-  // Processing user input, e.g. waiting for the response from the AI services
+  // If audio need to be transcribed to text this state should be used.
+  ListeningTranscription,
+  // Processing user input, e.g. waiting for the response from the AI services.
   Thinking,
-  // Speaking to the user, e.g. playing the audio and animation response
+  // Speaking to the user, e.g. playing the audio and animation response.
   Talking
 };

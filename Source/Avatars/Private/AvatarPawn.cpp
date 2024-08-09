@@ -10,6 +10,7 @@
 
 #include "AiIntellectComponent.h"
 #include "AudioStreamComponent.h"
+#include "AvatarsPlayerController.h"
 #include "BodyAnimInstance.h"
 #include "FaceAnimInstance.h"
 #include "Get.h"
@@ -199,10 +200,16 @@ void AAvatarPawn::SetState(EAvatarState NewState)
   }
   if (bDebug) ULog::InfoIf(GetAvatarsController(), "Avatar state changed to: " + MapStateToString(NewState));
 
-  UBodyAnimInstance* BodyAnimBP = Cast<UBodyAnimInstance>(FaceMeshComponent->GetAnimInstance());
+  UBodyAnimInstance* BodyAnimBP = Cast<UBodyAnimInstance>(BodyMeshComponent->GetAnimInstance());
   if (BodyAnimBP == nullptr)
   {
-    if (bDebug) ULog::Error("Could not get reference to UBodyAnimInstance* BodyAnimBP");
+    if (bDebug)
+    {
+      FString Message = FString::Printf(
+          TEXT("Could not get reference to UBodyAnimInstance* BodyAnimBP while setting avatar state: %s"), *MapStateToString(NewState)
+      );
+      ULog::Error(Message);
+    }
     return;
   }
   BodyAnimBP->SetAvatarState(NewState);
@@ -234,16 +241,43 @@ bool AAvatarPawn::GetDialogSoundWave(const FString Path, const FString AssetName
 
 void AAvatarPawn::PlayDialogSoundWave(USoundWave* DialogSound)
 {
-  if (DialogSound != nullptr)
-  {
-    AudioComponent->Stop();
-    AudioComponent->SetSound(DialogSound);
-    AudioComponent->Play();
-  }
+  if (ULog::ErrorIf(DialogSound == nullptr, "DialogSound is nullptr")) return;
+
+  AudioComponent->Stop();
+  AudioComponent->SetSound(DialogSound);
+  AudioComponent->Play();
+  UE_LOG(LogTemp, Display, TEXT("Playing dialog audio: %s"), *DialogSound->GetName());
 }
 
 void AAvatarPawn::OnAudioFinishedPlaying()
 {
+  UFaceAnimInstance* FaceAnimBP = Cast<UFaceAnimInstance>(FaceMeshComponent->GetAnimInstance());
+  if (FaceAnimBP == nullptr)
+  {
+    if (bDebug) ULog::Error("Could not get reference to UFaceAnimInstance* FaceAnimBP");
+    return;
+  }
+  FaceAnimBP->StopFaceAnimation();
+
+  if (MultiPartDialog.SetNextPart())
+  {
+    const float Delay = MultiPartDialog.GetPartDelay();
+    FTimerHandle Handle;
+    GetWorldTimerManager().SetTimer(
+        Handle,
+        FTimerDelegate::CreateLambda([this] {
+          PlayDialogSoundWave(MultiPartDialog.GetNextAudioFile());
+          PlayDialogFaceAnimation(MultiPartDialog.GetNextAnimationFile());
+        }),
+        Delay,
+        false
+    );
+    return;
+  }
+
+  if (IsInState(EAvatarState::Talking)) SetState(EAvatarState::Idle);
+  UE_LOG(LogTemp, Warning, TEXT("Dialog audio finished playing"));
+
   // TODO: find a way to unload sound from memory instead of destroying it entirely
   // (which also corrupts audio files in editor)
 
@@ -253,15 +287,6 @@ void AAvatarPawn::OnAudioFinishedPlaying()
   //   return;
   // }
   // SoundToUnload->ConditionalBeginDestroy();
-
-  UFaceAnimInstance* FaceAnimBP = Cast<UFaceAnimInstance>(FaceMeshComponent->GetAnimInstance());
-  if (FaceAnimBP == nullptr)
-  {
-    if (bDebug) ULog::Error("Could not get reference to UFaceAnimInstance* FaceAnimBP");
-    return;
-  }
-  FaceAnimBP->StopFaceAnimation();
-  if (IsInState(EAvatarState::Talking)) SetState(EAvatarState::Idle);
 }
 
 bool AAvatarPawn::GetDialogFaceAnimation(
@@ -269,7 +294,7 @@ bool AAvatarPawn::GetDialogFaceAnimation(
 )
 {
   const FString AnimationPath = "/Game" + Path + "Dialogs/" + LanguageString + "/Animations/";
-  const FString FullName = TEXT("animFace_") + AssetName;
+  const FString FullName = "animFace_" + AssetName;
 
   if (LastFaceAnimationPath == (AnimationPath + FullName) && LastFaceAnimation != nullptr)
   {
@@ -300,15 +325,33 @@ void AAvatarPawn::PlayDialogFaceAnimation(UAnimSequence* FaceAnimation)
 
   if (FaceAnimBP == nullptr)
   {
-    if (bDebug) ULog::Error("Could not get reference to UFaceAnimInstance* FaceAnimBP");
+    if (bDebug)
+    {
+      FString Message = FString::Printf(
+          TEXT("Could not get reference to UFaceAnimInstance* FaceAnimBP while playing dialog animation: %s"), *FaceAnimation->GetName()
+      );
+      ULog::Error(Message);
+    }
     return;
   };
 
   FaceAnimBP->PlayFaceAnimation(FaceAnimation);
+  UE_LOG(LogTemp, Display, TEXT("Playing dialog animation: %s"), *FaceAnimation->GetName());
 }
 
-void AAvatarPawn::PlayDialog(const FString Path, const FString AssetName, FString LanguageString)
+void AAvatarPawn::PlayDialog(const FString Path, const FString AssetName, FString LanguageString, const bool bIsMultiPartDialog)
 {
+  if (bIsMultiPartDialog)
+  {
+    if (!MultiPartDialog.Setup(Path, AssetName, LanguageString)) return;
+
+    PlayDialogSoundWave(MultiPartDialog.GetNextAudioFile());
+    PlayDialogFaceAnimation(MultiPartDialog.GetNextAnimationFile());
+
+    SetState(EAvatarState::Talking);
+    return;
+  }
+
   UAnimSequence* Animation = nullptr;
   GetDialogFaceAnimation(Path, AssetName, "Common", Animation) || GetDialogFaceAnimation(Path, AssetName, LanguageString, Animation);
 
@@ -319,6 +362,7 @@ void AAvatarPawn::PlayDialog(const FString Path, const FString AssetName, FStrin
 
   PlayDialogFaceAnimation(Animation);
   PlayDialogSoundWave(SoundWave);
+
   SetState(EAvatarState::Talking);
 }
 

@@ -14,6 +14,8 @@
 
 #include "AvatarsPlayerController.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogAwatarsPlayerController, Display, All);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageChangeSignature, EAvatarLanguage, Language);
 
 class IWebSocket;
@@ -172,8 +174,9 @@ public:
   UFUNCTION(BlueprintCallable, meta = (ReturnValueDisplayName = "Message Sent"))
   bool SendUserMessage(FString Message);
 
+  /* The multi part dialog consist of number of small dialogs. */
   UFUNCTION(BlueprintCallable)
-  void DisplayAvatarMessage(FString Message, FString AudioPath, const TArray<FString>& NewSuggestions);
+  void DisplayAvatarMessage(FString Message, FString AudioPath, const TArray<FString>& NewSuggestions, const TArray<FString>& ResponseTags);
 
   UPROPERTY()
   TArray<FString> Suggestions;

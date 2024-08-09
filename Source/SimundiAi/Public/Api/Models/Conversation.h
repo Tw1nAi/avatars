@@ -67,6 +67,9 @@ struct FMessage
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Timestamp;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FString> Tags;
 };
 
 USTRUCT(Blueprintable, BlueprintType)
