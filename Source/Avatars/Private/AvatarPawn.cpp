@@ -368,6 +368,7 @@ void AAvatarPawn::PlayDialog(const FString Path, const FString AssetName, FStrin
 
 void AAvatarPawn::StopDialog()
 {
+  MultiPartDialog.Stop();
   AudioComponent->FadeOut(1.f, 0.f, EAudioFaderCurve::Logarithmic);
   UFaceAnimInstance* FaceAnimBP = Cast<UFaceAnimInstance>(FaceMeshComponent->GetAnimInstance());
 

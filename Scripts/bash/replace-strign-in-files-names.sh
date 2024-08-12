@@ -3,7 +3,7 @@
 # Default values
 directory="/path/to/default/directory"
 stringToChange="_bsweight"
-replacement="animFace_"
+replacement="animFace"
 
 # Function to display usage
 usage() {

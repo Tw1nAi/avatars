@@ -123,4 +123,11 @@ struct FMultiPartDialog
     }
     return FMath::RandRange(PartsDelayRange.X, PartsDelayRange.Y);
   }
+
+  void Stop()
+  {
+    CurrentPart = -1;
+    AudioFiles.Empty();
+    AnimationFiles.Empty();
+  }
 };
