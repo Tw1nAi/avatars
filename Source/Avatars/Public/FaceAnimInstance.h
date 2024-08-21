@@ -60,9 +60,6 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UAnimSequenceBase* DialogAnimation;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  bool bIsFaceAnimationValid;
-
   /* Blink Animation */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Eyes Animation")
   FFloatAnimationSettings BlinkAnimationSettings;

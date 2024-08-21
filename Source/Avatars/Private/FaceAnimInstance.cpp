@@ -6,6 +6,8 @@
 #include "Get.h"
 #include "Log.h"
 
+const FName DefaultSlotName = FName("DefaultSlot");
+
 UFaceAnimInstance::UFaceAnimInstance()
 {
   bPlayBlinkAnimation = true;
@@ -51,25 +53,10 @@ void UFaceAnimInstance::PlayFaceAnimation(UAnimSequenceBase* Animation)
 {
   if (ULog::ErrorIf(Animation == nullptr, TEXT("Animation instance is nullptr"))) return;
 
-  DialogAnimation = Animation;
-  bIsFaceAnimationValid = DialogAnimation != nullptr;
-
-  // FTimerDelegate LockFaceAnimEntryDelegate;
-  // LockFaceAnimEntryDelegate.BindLambda([&]() {
-  //   this->bIsFaceAnimationValid = false;
-  // });
-  // FTimerHandle Handle;
-  // GetWorld()->GetTimerManager().SetTimer(Handle, LockFaceAnimEntryDelegate, DialogAnimation->GetPlayLength() * 0.5, false);
-
-  // FTimerDelegate TimerDelegate;
-  // TimerDelegate.BindLambda([&]() {
-  //   this->bIsFaceAnimationValid = false;
-  // });
-  // FTimerHandle Handle;
-  // GetWorld()->GetTimerManager().SetTimer(Handle, TimerDelegate, DialogAnimation->GetPlayLength() * 0.5, false);
+  PlaySlotAnimationAsDynamicMontage(Animation, DefaultSlotName, 0.2f);
 }
 
 void UFaceAnimInstance::StopFaceAnimation()
 {
-  bIsFaceAnimationValid = false;
+  StopSlotAnimation(0.5f, DefaultSlotName);
 }
