@@ -91,10 +91,10 @@ class RESTAPI_API URestApi : public UObject
 public:
   URestApi();
 
-  inline static constexpr TCHAR* Get = TEXT("GET");
-  inline static constexpr TCHAR* Post = TEXT("POST");
-  inline static constexpr TCHAR* Put = TEXT("PUT");
-  inline static constexpr TCHAR* Delete = TEXT("DELETE");
+  inline static constexpr const TCHAR* Get = TEXT("GET");
+  inline static constexpr const TCHAR* Post = TEXT("POST");
+  inline static constexpr const TCHAR* Put = TEXT("PUT");
+  inline static constexpr const TCHAR* Delete = TEXT("DELETE");
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString BaseUrl;

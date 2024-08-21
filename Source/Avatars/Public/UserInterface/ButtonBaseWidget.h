@@ -16,7 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnButtonHoldSignature);
 class FButtonHoldTicker : public FTickableGameObject
 {
 public:
-  FButtonHoldTicker(std::function<void()> InCallback, float InHoldInterval)
+  FButtonHoldTicker(TFunction<void()> InCallback, float InHoldInterval)
       : Callback(InCallback), HoldInterval(InHoldInterval), AccumulatedTime(0.0f)
   {
   }
@@ -52,7 +52,7 @@ public:
   }
 
 private:
-  std::function<void()> Callback;
+  TFunction<void()> Callback;
   float HoldInterval;
   float AccumulatedTime;
 };

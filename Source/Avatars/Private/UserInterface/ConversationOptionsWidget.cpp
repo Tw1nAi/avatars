@@ -101,7 +101,7 @@ void UConversationOptionsWidget::OnAvatarsChangeDelayChange(const FText& InText)
 
           if (Delay > 0.0f)
           {
-            PlayerController->StartChangeAvatarTimeout();
+            WeakThis->PlayerController->StartChangeAvatarTimeout();
           }
           else
           {
@@ -180,7 +180,7 @@ void UConversationOptionsWidget::OnIdleGreetingTimeoutChange(const FText& InText
 
           if (Delay > 0.0f)
           {
-            PlayerController->StartGreetingTimeout();
+            WeakThis->PlayerController->StartGreetingTimeout();
           }
           else
           {

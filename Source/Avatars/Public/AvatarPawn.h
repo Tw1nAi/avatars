@@ -44,7 +44,7 @@ public:
   TObjectPtr<UAiIntellectComponent> IntellectComponent;
 
   /* Use this property to set reference for custom camera for this actor.
-    If not null it will be used as camera fot this avatar upon selection/possesion. */
+    If not null it will be used as camera fot this avatar upon selection/possession. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
   TObjectPtr<ACameraActor> CustomCamera;
 
@@ -67,7 +67,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   USceneComponent* SceneComponent;
 
-  // TODO: could be instance any component that inherits from the AiVoice interface, which would allow for more generic approach.
+  // TODO: could be instanced any component that inherits from the AiVoice interface, which would allow for more generic approach.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UAudioComponent* AudioComponent;
 
@@ -77,7 +77,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   USkeletalMeshComponent* FaceMeshComponent;
 
-  // TODO: could be instance of any component that inherits from AiHearing interface, which would allow for more generic approach.
+  // TODO: could be instanced of any component that inherits from AiHearing interface, which would allow for more generic approach.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UAudioStreamComponent* AudioStreamComponent;
 
