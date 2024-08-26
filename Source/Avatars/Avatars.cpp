@@ -1,6 +1,6 @@
-// Copyright Juice sp. z o. o., All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Avatars.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, Avatars, "Avatars");
+IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, Avatars, "Avatars" );

@@ -19,7 +19,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LogAwatarsPlayerController, Display, All);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageChangeSignature, EAvatarLanguage, Language);
 
 class IWebSocket;
-class UDataTable;
 class URootWidget;
 class URuntimeAudioExporter;
 

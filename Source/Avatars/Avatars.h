@@ -1,5 +1,6 @@
-// Copyright Juice sp. z o. o., All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
+

@@ -1,22 +1,23 @@
-// Copyright Juice sp. z o. o., All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
-using System.Collections.Generic;
 
 public class AvatarsTarget : TargetRules
 {
-    public AvatarsTarget(TargetInfo Target) : base(Target)
-    {
-        Type = TargetType.Game;
-        DefaultBuildSettings = BuildSettingsVersion.V2;
-
-        ExtraModuleNames.Add("TextHelpers");
-        ExtraModuleNames.Add("AiIntellect");
-        ExtraModuleNames.Add("RestApi");
-        ExtraModuleNames.Add("WebsocketAudioStream");
-        ExtraModuleNames.Add("JsonHelpers");
-        ExtraModuleNames.Add("SimundiAi");
-        ExtraModuleNames.Add("AiIdentity");
-        ExtraModuleNames.AddRange(new string[] { "Avatars" });
-    }
+  public AvatarsTarget(TargetInfo Target) : base(Target)
+  {
+    Type = TargetType.Game;
+    DefaultBuildSettings = BuildSettingsVersion.V4;
+    IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
+    ExtraModuleNames.Add("TextHelpers");
+    ExtraModuleNames.Add("AiIntellect");
+    ExtraModuleNames.Add("RestApi");
+    ExtraModuleNames.Add("WebsocketAudioStream");
+    ExtraModuleNames.Add("JsonHelpers");
+    ExtraModuleNames.Add("SimundiAi");
+    ExtraModuleNames.Add("AiIdentity");
+    ExtraModuleNames.Add("WidgetsToolkit");
+    ExtraModuleNames.Add("CustomGameUserSettings");
+    ExtraModuleNames.AddRange(new string[] { "Avatars" });
+  }
 }
