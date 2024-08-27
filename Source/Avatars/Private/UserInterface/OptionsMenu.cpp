@@ -43,6 +43,9 @@ void UOptionsMenu::BuildPanels()
 
     Panel->SetInteractive(true);
     Panel->SetToggle(false);
+    // Wihtout this delay the UOptionsMenu::HideAllPanels method could be called after the panel is hidden. That's because the multicast
+    // delegates are not called in the order they where added.
+    Panel->ToggleDelay = 0.025f;
     OptionsContainer->AddChild(Panel);
 
     if (!OptionsPanel.ButtonWidgetClass)
@@ -71,10 +74,9 @@ void UOptionsMenu::BuildPanels()
     {
       TextButton->SetText(OptionsPanel.Label);
     }
-    Button->SetControlledWidget(Panel);
     Button->Button->OnClicked.AddDynamic(this, &UOptionsMenu::HideAllPanels);
-    Button->Button->OnClicked.AddDynamic(Panel, &UWidgetBase::Toggle);
-    Button->SetToggle(true);
+    Button->Button->OnClicked.AddDynamic(Panel, &UWidgetBase::ShowDelayed);
+    Button->Show();
     MenuContainer->AddChild(Button);
 
     // log MenuContainer children count
@@ -94,7 +96,7 @@ void UOptionsMenu::HideAllPanels()
       UWidget* Widget = OptionsContainer->GetChildAt(Index);
       if (UWidgetBase* WidgetBase = Cast<UWidgetBase>(Widget))
       {
-        WidgetBase->SetToggle(false);
+        WidgetBase->Hide();
       }
     }
   }

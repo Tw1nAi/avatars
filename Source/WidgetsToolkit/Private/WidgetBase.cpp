@@ -34,6 +34,16 @@ void UWidgetBase::Show()
   ShowNative();
 }
 
+void UWidgetBase::ShowDelayed()
+{
+  if (ToggleDelay > 0.0f)
+  {
+    FTimerHandle ToggleTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(ToggleTimerHandle, this, &UWidgetBase::Show, ToggleDelay, false);
+    return;
+  }
+}
+
 void UWidgetBase::Hide(const bool bShouldCollapse /*= true*/)
 {
   bIsToggled = false; // side effect!!

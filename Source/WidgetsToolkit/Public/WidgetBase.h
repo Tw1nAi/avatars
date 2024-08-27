@@ -30,6 +30,8 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Widget Base")
   void Show();
+  UFUNCTION(BlueprintCallable, Category = "Widget Base")
+  void ShowDelayed();
   virtual void ShowNative();
 
   UFUNCTION(BlueprintCallable, Category = "Widget Base")
@@ -51,6 +53,10 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Widget Base")
   void SetToggle(const bool bToggle);
+
+  /* If set to above 0 (zero) the delay will be added before the toggle will be performed. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget Base")
+  float ToggleDelay = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget Base")
   bool bIsToggled = true;
