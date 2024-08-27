@@ -1,20 +1,102 @@
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
 #include "UserInterface/OptionsMenu.h"
+#include "Components/Spacer.h"
+
+#include "TextButtonWidget.h"
+#include "WidgetBase.h"
 
 void UOptionsMenu::NativeConstruct()
 {
-  if (OpenConversationMenuButton != nullptr)
+  Super::NativeConstruct();
+  BuildPanels();
+}
+
+void UOptionsMenu::SynchronizeProperties()
+{
+  Super::SynchronizeProperties();
+  BuildPanels();
+}
+
+void UOptionsMenu::BuildPanels()
+{
+  OptionsContainer->ClearChildren();
+  MenuContainer->ClearChildren();
+  UWidgetBase* FirstPanel = nullptr;
+  for (int32 Index = 0; Index < OptionsPanels.Num(); ++Index)
   {
-    OpenConversationMenuButton->OnClicked.AddDynamic(this, &UOptionsMenu::OnOpenConversationMenuButtonClicked);
+    FPanelSettings& OptionsPanel = OptionsPanels[Index];
+    if (!OptionsPanel.PanelWidgetClass)
+    {
+      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: PanelWidgetClass is not set"));
+      return;
+    }
+    UWidgetBase* Panel = CreateWidget<UWidgetBase>(this, OptionsPanel.PanelWidgetClass);
+    if (Index == 0) FirstPanel = Panel;
+    if (Panel == nullptr)
+    {
+      UE_LOG(
+          LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.PanelWidgetClass->GetName()
+      );
+      return;
+    }
+
+    Panel->SetInteractive(true);
+    Panel->SetToggle(false);
+    OptionsContainer->AddChild(Panel);
+
+    if (!OptionsPanel.ButtonWidgetClass)
+    {
+      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: ButtonWidgetClass is not set"));
+      return;
+    }
+    UButtonBaseWidget* Button = CreateWidget<UButtonBaseWidget>(this, OptionsPanel.ButtonWidgetClass);
+    if (Button == nullptr)
+    {
+      UE_LOG(
+          LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.ButtonWidgetClass->GetName()
+      );
+      return;
+    }
+
+    if (Index != 0)
+    {
+      USpacer* Spacer = NewObject<USpacer>(this);
+      Spacer->SetSize(FVector2D(MenuItemsSpacing, MenuItemsSpacing));
+      MenuContainer->AddChild(Spacer);
+    }
+
+    Button->SetInteractive(true);
+    if (UTextButtonWidget* TextButton = Cast<UTextButtonWidget>(Button))
+    {
+      TextButton->SetText(OptionsPanel.Label);
+    }
+    Button->SetControlledWidget(Panel);
+    Button->Button->OnClicked.AddDynamic(this, &UOptionsMenu::HideAllPanels);
+    Button->Button->OnClicked.AddDynamic(Panel, &UWidgetBase::Toggle);
+    Button->SetToggle(true);
+    MenuContainer->AddChild(Button);
+
+    // log MenuContainer children count
   }
-  if (ConversationOptions)
+  if (FirstPanel)
   {
-    HideAllExceptOf(ConversationOptions);
+    FirstPanel->SetToggle(true);
   }
-  if (OpenCameraOptionsButton != nullptr)
+}
+
+void UOptionsMenu::HideAllPanels()
+{
+  if (OptionsContainer != nullptr)
   {
-    OpenCameraOptionsButton->OnClicked.AddDynamic(this, &UOptionsMenu::OnOpenCameraOptionsButtonClicked);
+    for (int32 Index = 0; Index < OptionsContainer->GetChildrenCount(); ++Index)
+    {
+      UWidget* Widget = OptionsContainer->GetChildAt(Index);
+      if (UWidgetBase* WidgetBase = Cast<UWidgetBase>(Widget))
+      {
+        WidgetBase->SetToggle(false);
+      }
+    }
   }
 }
 
@@ -39,22 +121,6 @@ void UOptionsMenu::SetUseTimeout(bool bUse)
   bUseTimeout = bUse;
   if (!bUseTimeout) ClearTimeout();
   TimoutDisplay->SetVisibility(bUseTimeout ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-}
-
-void UOptionsMenu::OnOpenConversationMenuButtonClicked()
-{
-  if (ConversationOptions != nullptr)
-  {
-    HideAllExceptOf(ConversationOptions);
-  }
-}
-
-void UOptionsMenu::OnOpenCameraOptionsButtonClicked()
-{
-  if (CameraOptions != nullptr)
-  {
-    HideAllExceptOf(CameraOptions);
-  }
 }
 
 void UOptionsMenu::ClearTimeout()
@@ -104,6 +170,6 @@ void UOptionsMenu::StartMenuTimeout(const float Timeout)
   TimoutCounter = MenuTimeout;
   UpdateTimeoutDisplay();
 
-  GetWorld()->GetTimerManager().SetTimer(MenuTimeoutHandle, this, &UOptionsMenu::Hide, MenuTimeout, false);
+  GetWorld()->GetTimerManager().SetTimer(MenuTimeoutHandle, FTimerDelegate::CreateLambda([this] { this->Hide(); }), MenuTimeout, false);
   GetWorld()->GetTimerManager().SetTimer(TimeoutTickHandle, this, &UOptionsMenu::OnTimeoutTick, 1.0f, true);
 }

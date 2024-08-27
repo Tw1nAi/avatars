@@ -1,6 +1,6 @@
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
-#include "UserInterface/ButtonBaseWidget.h"
+#include "ButtonBaseWidget.h"
 
 void UButtonBaseWidget::NativeConstruct()
 {
@@ -27,7 +27,7 @@ void UButtonBaseWidget::SynchronizeProperties()
 
 void UButtonBaseWidget::OnPressedDefault()
 {
-  if (!OnHoldEvent.IsBound()) return;
+  if (!bUseOnHoldEvent || !OnHoldEvent.IsBound()) return;
 
   // Create the ticker object
   if (!HoldTicker)
@@ -51,4 +51,9 @@ void UButtonBaseWidget::OnReleasedDefault()
 {
   // Destroy the ticker object
   HoldTicker.Reset();
+}
+
+void UButtonBaseWidget::SetControlledWidget(UWidgetBase* Widget)
+{
+  ControlledWidget = Widget;
 }

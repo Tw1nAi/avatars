@@ -5,7 +5,7 @@
 #include "AvatarsTypes.h"
 #include "Components/WrapBox.h"
 #include "CoreMinimal.h"
-#include "UserInterface/BaseWidget.h"
+#include "WidgetBase.h"
 
 #include "LanguageSwitcherWidget.generated.h"
 
@@ -14,7 +14,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageSwitchSignature, EAvatarL
 class ULanguageButtonWidget;
 
 UCLASS()
-class AVATARS_API ULanguageSwitcherWidget : public UBaseWidget
+class AVATARS_API ULanguageSwitcherWidget : public UWidgetBase
 {
   GENERATED_BODY()
 

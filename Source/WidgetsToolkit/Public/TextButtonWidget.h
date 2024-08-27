@@ -2,14 +2,14 @@
 
 #pragma once
 
+#include "ButtonBaseWidget.h"
 #include "Components/TextBlock.h"
 #include "CoreMinimal.h"
-#include "UserInterface/ButtonBaseWidget.h"
 
 #include "TextButtonWidget.generated.h"
 
 UCLASS()
-class AVATARS_API UTextButtonWidget : public UButtonBaseWidget
+class WIDGETSTOOLKIT_API UTextButtonWidget : public UButtonBaseWidget
 {
   GENERATED_BODY()
 
@@ -27,4 +27,7 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Button")
   FSlateColor TextColor;
+
+  UFUNCTION(BlueprintCallable)
+  void SetText(const FText& NewText);
 };

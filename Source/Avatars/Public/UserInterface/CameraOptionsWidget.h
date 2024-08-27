@@ -2,16 +2,16 @@
 
 #pragma once
 
+#include "ButtonBaseWidget.h"
 #include "Components/Slider.h"
 #include "CoreMinimal.h"
-#include "UserInterface/BaseWidget.h"
-#include "UserInterface/ButtonBaseWidget.h"
-#include "UserInterface/TextButtonWidget.h"
+#include "TextButtonWidget.h"
+#include "WidgetBase.h"
 
 #include "CameraOptionsWidget.generated.h"
 
 UCLASS()
-class AVATARS_API UCameraOptionsWidget : public UBaseWidget
+class AVATARS_API UCameraOptionsWidget : public UWidgetBase
 {
   GENERATED_BODY()
 

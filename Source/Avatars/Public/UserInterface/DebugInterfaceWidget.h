@@ -5,12 +5,12 @@
 #include "AvatarsTypes.h"
 #include "Components/TextBlock.h"
 #include "CoreMinimal.h"
-#include "UserInterface/BaseWidget.h"
+#include "WidgetBase.h"
 
 #include "DebugInterfaceWidget.generated.h"
 
 UCLASS()
-class AVATARS_API UDebugInterfaceWidget : public UBaseWidget
+class AVATARS_API UDebugInterfaceWidget : public UWidgetBase
 {
   GENERATED_BODY()
 

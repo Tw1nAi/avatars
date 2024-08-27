@@ -5,7 +5,7 @@
 #include "Components/CheckBox.h"
 #include "Components/EditableText.h"
 #include "CoreMinimal.h"
-#include "UserInterface/BaseWidget.h"
+#include "WidgetBase.h"
 #include "Utils/Public/Debouncer.h"
 
 #include "ConversationOptionsWidget.generated.h"
@@ -13,7 +13,7 @@
 class AAvatarsPlayerController;
 
 UCLASS()
-class AVATARS_API UConversationOptionsWidget : public UBaseWidget
+class AVATARS_API UConversationOptionsWidget : public UWidgetBase
 {
   GENERATED_BODY()
 

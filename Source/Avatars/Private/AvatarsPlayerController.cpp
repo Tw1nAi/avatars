@@ -4,6 +4,7 @@
 #include "AvatarsPlayerController.h"
 
 #include "Components/AudioComponent.h"
+#include "GameFramework/GameUserSettings.h"
 #include "IWebSocket.h"
 #include "WebSocketsModule.h"
 
@@ -54,6 +55,12 @@ AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
 void AAvatarsPlayerController::BeginPlay()
 {
   Super::BeginPlay();
+
+  // if (UGameUserSettings* UserSettings = GEngine->GetGameUserSettings())
+  // {
+  //   FIntPoint Resolution = UserSettings->GetScreenResolution();
+  //   UE_LOG(LogAwatarsPlayerController, Display, TEXT("Screen resolution: %dx%d"), Resolution.X, Resolution.Y);
+  // }
 
   // TODO : move this to AAvatarPawn an init when the avatar is created or possesed
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))

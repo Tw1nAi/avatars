@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 
 #include "AvatarsTypes.h"
+#include "ButtonBaseWidget.h"
 #include "Components/TextBlock.h"
-#include "UserInterface/ButtonBaseWidget.h"
 
 #include "LanguageButtonWidget.generated.h"
 

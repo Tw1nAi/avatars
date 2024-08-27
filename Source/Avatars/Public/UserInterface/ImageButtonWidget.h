@@ -2,8 +2,8 @@
 
 #pragma once
 
+#include "ButtonBaseWidget.h"
 #include "CoreMinimal.h"
-#include "UserInterface/ButtonBaseWidget.h"
 
 #include "ImageButtonWidget.generated.h"
 

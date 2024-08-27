@@ -1,6 +1,6 @@
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
-#include "UserInterface/TextButtonWidget.h"
+#include "TextButtonWidget.h"
 
 void UTextButtonWidget::SynchronizeProperties()
 {
@@ -11,5 +11,14 @@ void UTextButtonWidget::SynchronizeProperties()
     TextBlock->SetText(Text);
     TextBlock->SetFont(Font);
     TextBlock->SetColorAndOpacity(TextColor);
+  }
+}
+
+void UTextButtonWidget::SetText(const FText& NewText)
+{
+  Text = NewText;
+  if (TextBlock != nullptr)
+  {
+    TextBlock->SetText(Text);
   }
 }

@@ -70,5 +70,5 @@ public:
    * @param Duration The duration in seconds for which the message should be displayed. Default is 10 seconds.
    * @return True if the error was thrown, false otherwise.
    */
-  static bool ErrorIf(const bool bCondition, const FString ErrorMessage, const bool bLogStack = false, const float Duration = 10.f);
+  static bool ErrorIf(const bool bCondition, const FString ErrorMessage, const bool bLogStack = true, const float Duration = 10.f);
 };

@@ -326,7 +326,7 @@ void URootWidget::ShowPressToTalkMessage()
     return;
   }
 
-  StatusMessge->SetText(GetTranslation("PressToTalkMessage"));
+  StatusMessge->SetText(GetTranslation("StateIdleMessage"));
   StatusMessge->SetVisibility(ESlateVisibility::Visible);
 }
 

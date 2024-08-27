@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UserInterface/BaseWidget.h"
+#include "WidgetBase.h"
 
 #include "HeaderWidget.generated.h"
 
 UCLASS()
-class AVATARS_API UHeaderWidget : public UBaseWidget
+class AVATARS_API UHeaderWidget : public UWidgetBase
 {
   GENERATED_BODY()
 };

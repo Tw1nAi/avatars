@@ -7,7 +7,7 @@
 #include "CoreMinimal.h"
 #include "Delegates/DelegateSignatureImpl.inl"
 #include "Tickable.h"
-#include "UserInterface/BaseWidget.h"
+#include "WidgetBase.h"
 
 #include "ButtonBaseWidget.generated.h"
 
@@ -58,7 +58,7 @@ private:
 };
 
 UCLASS()
-class AVATARS_API UButtonBaseWidget : public UBaseWidget
+class WIDGETSTOOLKIT_API UButtonBaseWidget : public UWidgetBase
 {
   GENERATED_BODY()
 
@@ -66,23 +66,35 @@ public:
   virtual void NativeConstruct() override;
   virtual void SynchronizeProperties() override;
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-  UButton* Button;
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Button Base", meta = (BindWidget))
+  TObjectPtr<UButton> Button;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Image Button", meta = (DisplayName = "Button Style"))
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Base", meta = (DisplayName = "Button Style"))
   FButtonStyle ButtonStyle;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Base")
+  bool bUseOnHoldEvent = false;
 
   /* Use this event to fire instructions while the button is held. */
   FOnButtonHoldSignature OnHoldEvent;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  /* If the OnHoldEvent is bound this timer will be used to measure how much time must pass before the event is fired. BE WARNED: this is
+   * not about event AFTER the button was pressed, but WHILE it is pressed. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Base")
   float OnHoldInterval = 0.05f;
 
 protected:
   /* These methods add and remove tick callback to continuously pressed button. */
   TUniquePtr<FButtonHoldTicker> HoldTicker;
 
-private:
   UFUNCTION() void OnPressedDefault();
   UFUNCTION() void OnReleasedDefault();
+
+  /* Often buttons are used to open close or otherwise controll other widgets. This allows to set the reference for that widget. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TObjectPtr<UWidgetBase> ControlledWidget;
+
+public:
+  UFUNCTION(BlueprintCallable)
+  void SetControlledWidget(UWidgetBase* Widget);
 };
