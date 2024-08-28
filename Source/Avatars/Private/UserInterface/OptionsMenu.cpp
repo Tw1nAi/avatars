@@ -45,7 +45,7 @@ void UOptionsMenu::BuildPanels()
     Panel->SetToggle(false);
     // Wihtout this delay the UOptionsMenu::HideAllPanels method could be called after the panel is hidden. That's because the multicast
     // delegates are not called in the order they where added.
-    Panel->ToggleDelay = 0.025f;
+    Panel->ToggleDelay = 0.015f;
     OptionsContainer->AddChild(Panel);
 
     if (!OptionsPanel.ButtonWidgetClass)

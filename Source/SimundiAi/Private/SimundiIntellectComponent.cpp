@@ -80,7 +80,7 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
   auto PostNewConversationHandle = Api->PostNewConversation(LanguageIso, AvatarId);
 
   PostNewConversationHandle
-      ->Then([this, LanguageIso](const FPostConversationResponse& Data) mutable {
+      ->Then([this, LanguageIso](const FPostConversationResponse& Response) mutable {
         if (!IsValid(this))
         {
           FString Message = FString::Printf(
@@ -91,12 +91,20 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
           return;
         }
 
-        this->SetConversationId(Data.ConversationId);
+        this->SetConversationId(Response.ConversationId);
 
         if (!this->PendingMessage.IsEmpty())
         {
           this->RespondTo(this->PendingMessage, LanguageIso);
           this->PendingMessage.Empty();
+          return;
+        }
+
+        if (this->OnAiResponseEvent.IsBound())
+        {
+          this->OnAiResponseEvent.Broadcast(
+              Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags
+          );
         }
       })
       ->Run();

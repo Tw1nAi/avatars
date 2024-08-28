@@ -33,11 +33,14 @@ AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
 {
   if (ULog::ErrorIf(World == nullptr, "World is nullptr")) return nullptr;
 
-  APlayerController* Controller = UGameplayStatics::GetPlayerController(World, 0);
+  UGameInstance* GameInstance = World->GetGameInstance();
+  if (ULog::ErrorIf(GameInstance == nullptr, "GameInstance is nullptr")) return nullptr;
+
+  APlayerController* Controller = GameInstance->GetFirstLocalPlayerController(World);
   if (Controller == nullptr)
   {
     // ! find out why this is happening
-    // ULog::Error("Could not get reference to AAvatarsPlayerController* PlayerController");
+    ULog::Error("Could not get reference to AAvatarsPlayerController* PlayerController");
     return nullptr;
   }
 
@@ -45,7 +48,7 @@ AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
   if (OutController == nullptr)
   {
     // ! find out why this is happening
-    // ULog::Error("Could not cast to AAvatarsPlayerController");
+    ULog::Error("Could not cast to AAvatarsPlayerController");
     return nullptr;
   }
 
@@ -544,19 +547,19 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   if (bUseLocalTranscription) SelectedAvatar->StartAudioStream();
   SelectedAvatar->bDebug = bDebug;
 
-  if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
-  {
-    // ! check persistance across all app!! some settings are not saved or not retrieved
-    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(SelectedAvatar->AvatarData.Name);
-    SelectedAvatar->ApplySettings(Settings);
-  }
-
   const bool bHasCustomCamera = SelectedAvatar->CheckCustomCamera(this);
   if (!bHasCustomCamera && bDebug)
   {
     GEngine->AddOnScreenDebugMessage(
         -1, 10.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera")
     );
+  }
+
+  if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
+  {
+    // ! check persistance across all app!! some settings are not saved or not retrieved
+    FAvatarSettings& Settings = Persistance->GetAvatarSettigns(SelectedAvatar->AvatarData.Name);
+    SelectedAvatar->ApplySettings(Settings);
   }
 
   if (RootWidget != nullptr)

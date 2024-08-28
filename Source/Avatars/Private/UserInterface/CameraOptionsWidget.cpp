@@ -16,18 +16,22 @@ void UCameraOptionsWidget::NativeConstruct()
   }
   if (TopButton != nullptr)
   {
+    TopButton->bUseOnHoldEvent = true;
     TopButton->OnHoldEvent.AddDynamic(this, &UCameraOptionsWidget::MoveUp);
   }
   if (RightButton != nullptr)
   {
+    RightButton->bUseOnHoldEvent = true;
     RightButton->OnHoldEvent.AddDynamic(this, &UCameraOptionsWidget::MoveRight);
   }
   if (DownButton != nullptr)
   {
+    DownButton->bUseOnHoldEvent = true;
     DownButton->OnHoldEvent.AddDynamic(this, &UCameraOptionsWidget::MoveDown);
   }
   if (LeftButton != nullptr)
   {
+    LeftButton->bUseOnHoldEvent = true;
     LeftButton->OnHoldEvent.AddDynamic(this, &UCameraOptionsWidget::MoveLeft);
   }
 
@@ -59,8 +63,11 @@ void UCameraOptionsWidget::SaveSettings()
 
 void UCameraOptionsWidget::OnPositionButtonClicked(FVector2D Direction)
 {
-  AAvatarsPlayerController* PlayerController = AAvatarsPlayerController::Get(GetWorld());
-  if (!PlayerController) return;
+  UWorld* World = GetWorld();
+  if (ULog::ErrorIf(World == nullptr, "World is nullptr")) return;
+
+  AAvatarsPlayerController* PlayerController = AAvatarsPlayerController::Get(World);
+  if (PlayerController == nullptr) return;
 
   PlayerController->OnCameraMoveInput(Direction);
 
@@ -69,7 +76,10 @@ void UCameraOptionsWidget::OnPositionButtonClicked(FVector2D Direction)
 
 void UCameraOptionsWidget::Center()
 {
-  AAvatarsPlayerController* PlayerController = AAvatarsPlayerController::Get(GetWorld());
+  UWorld* World = GetWorld();
+  if (ULog::ErrorIf(World == nullptr, "World is nullptr")) return;
+
+  AAvatarsPlayerController* PlayerController = AAvatarsPlayerController::Get(World);
   if (!PlayerController) return;
 
   PlayerController->ResetCameraLocation();

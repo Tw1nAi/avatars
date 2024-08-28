@@ -70,7 +70,10 @@ void AAvatarPawn::StopAudioStream()
 
 bool AAvatarPawn::GetAvatarsController()
 {
-  AAvatarsPlayerController::Get(GetWorld());
+  if (AvatarsController == nullptr)
+  {
+    AvatarsController = AAvatarsPlayerController::Get(GetWorld());
+  }
   return AvatarsController != nullptr;
 }
 
@@ -106,24 +109,23 @@ bool AAvatarPawn::CheckCustomCamera(APlayerController* NewController)
   }
 
   NewController->SetViewTarget(CustomCamera);
-  CameraInitialLocation = NewController->GetViewTarget()->GetActorLocation();
+  CameraInitialLocation = CustomCamera->GetActorLocation();
 
   return true;
 }
 
 void AAvatarPawn::AddCameraLocation(const FVector& Location)
 {
-  if (GetAvatarsController())
+  if (!GetAvatarsController()) return;
+
+  AActor* Camera = AvatarsController->GetViewTarget();
+  if (Camera != nullptr)
   {
-    AActor* Camera = AvatarsController->GetViewTarget();
-    if (Camera != nullptr)
-    {
-      FVector ClampedLocation;
-      ClampedLocation.X = FMath::Clamp(Location.X, -CameraMaxOffset.X, CameraMaxOffset.X);
-      ClampedLocation.Y = FMath::Clamp(Location.Y, -CameraMaxOffset.Y, CameraMaxOffset.Y);
-      ClampedLocation.Z = FMath::Clamp(Location.Z, -CameraMaxOffset.Z, CameraMaxOffset.Z);
-      Camera->SetActorLocation(CameraInitialLocation + ClampedLocation);
-    }
+    FVector ClampedLocation;
+    ClampedLocation.X = FMath::Clamp(Location.X, -CameraMaxOffset.X, CameraMaxOffset.X);
+    ClampedLocation.Y = FMath::Clamp(Location.Y, -CameraMaxOffset.Y, CameraMaxOffset.Y);
+    ClampedLocation.Z = FMath::Clamp(Location.Z, -CameraMaxOffset.Z, CameraMaxOffset.Z);
+    Camera->SetActorLocation(CameraInitialLocation + ClampedLocation);
   }
 }
 
@@ -141,14 +143,13 @@ void AAvatarPawn::OnCameraZoomInput(const float Zoom)
 
 void AAvatarPawn::SetCameraZoomByAlpha(const float Alpha)
 {
-  if (GetAvatarsController())
+  if (!GetAvatarsController()) return;
+
+  AActor* Camera = AvatarsController->GetViewTarget();
+  if (Camera != nullptr)
   {
-    AActor* Camera = AvatarsController->GetViewTarget();
-    if (Camera != nullptr)
-    {
-      CameraOffset.Y = FMath::GetMappedRangeValueClamped(FVector2D(0.0, 1.0), FVector2D(CameraMaxOffset.Y, -CameraMaxOffset.Y), Alpha);
-      Camera->SetActorLocation(CameraInitialLocation + CameraOffset);
-    }
+    CameraOffset.Y = FMath::GetMappedRangeValueClamped(FVector2D(0.0, 1.0), FVector2D(CameraMaxOffset.Y, -CameraMaxOffset.Y), Alpha);
+    Camera->SetActorLocation(CameraInitialLocation + CameraOffset);
   }
 }
 
