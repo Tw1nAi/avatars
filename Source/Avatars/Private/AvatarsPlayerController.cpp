@@ -59,11 +59,10 @@ void AAvatarsPlayerController::BeginPlay()
 {
   Super::BeginPlay();
 
-  // if (UGameUserSettings* UserSettings = GEngine->GetGameUserSettings())
-  // {
-  //   FIntPoint Resolution = UserSettings->GetScreenResolution();
-  //   UE_LOG(LogAwatarsPlayerController, Display, TEXT("Screen resolution: %dx%d"), Resolution.X, Resolution.Y);
-  // }
+  if (UGameUserSettings* GameUserSettings = GEngine->GetGameUserSettings())
+  {
+    GameUserSettings->ApplySettings(false);
+  }
 
   // TODO : move this to AAvatarPawn an init when the avatar is created or possesed
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
@@ -168,11 +167,7 @@ void AAvatarsPlayerController::ScheduleHideLoadingScreen()
 {
   FTimerHandle Handle;
   auto HideLoadingScreen = FTimerDelegate::CreateLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)] {
-    if (ULog::ErrorIf(
-            !WeakController.IsValid(),
-            "AvatarsPlayerController this reference is not valid AvatarsPlayerController BeginPlay HideLoadingScreen lambda"
-        ))
-      return;
+    if (ULog::ErrorIf(!WeakController.IsValid(), "AvatarsPlayerController this reference is not valid AvatarsPlayerController BeginPlay HideLoadingScreen lambda")) return;
     WeakController->EnableInput(WeakController.Get());
     WeakController->RootWidget->HideLoadingScreen();
   });
@@ -189,41 +184,28 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
 
   /* On Connected */
   WhisperWebsocket->OnConnected().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)]() mutable {
-    if (ULog::ErrorIf(
-            !WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnConnected lambda"
-        ))
-      return;
+    if (ULog::ErrorIf(!WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnConnected lambda")) return;
 
     ULog::InfoIf(WeakController->bDebug, "Connected to WhisperWebsocket");
     WeakController->WhisperWebsocket->Send(WeakController->OnConnectedResponse);
   });
 
   /* On Error */
-  WhisperWebsocket->OnConnectionError().AddLambda([](const FString& Error) mutable { ULog::Error("Websockets connection error: " + Error); }
-  );
+  WhisperWebsocket->OnConnectionError().AddLambda([](const FString& Error) mutable { ULog::Error("Websockets connection error: " + Error); });
 
   /* On Closed */
-  WhisperWebsocket->OnClosed().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this
-                                          )](int32 StatusCode, const FString& Reason, bool bWasClean) mutable {
-    if (ULog::ErrorIf(
-            !WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnClosed lambda"
-        ))
-      return;
+  WhisperWebsocket->OnClosed().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](int32 StatusCode, const FString& Reason, bool bWasClean) mutable {
+    if (ULog::ErrorIf(!WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnClosed lambda")) return;
 
     ULog::InfoIf(
         WeakController->bDebug,
-        "Closed WhisperWebsocket connection. Reason: " + Reason + " StatusCode: " + FString::FromInt(StatusCode) +
-            " bWasClean: " + (bWasClean ? "true" : "false")
+        "Closed WhisperWebsocket connection. Reason: " + Reason + " StatusCode: " + FString::FromInt(StatusCode) + " bWasClean: " + (bWasClean ? "true" : "false")
     );
   });
 
   /* On Message */
-  WhisperWebsocket->OnMessage().AddLambda([WeakController =
-                                               TWeakObjectPtr<AAvatarsPlayerController>(this)](const FString& Message) mutable {
-    if (ULog::ErrorIf(
-            !WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnMessage lambda."
-        ))
-      return;
+  WhisperWebsocket->OnMessage().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)](const FString& Message) mutable {
+    if (ULog::ErrorIf(!WeakController.IsValid(), "AvatarsPlayerController this reference is not valid in WhisperWebsocket->OnMessage lambda.")) return;
 
     if (WeakController->bDebug)
     {
@@ -338,11 +320,7 @@ void AAvatarsPlayerController::SetLanguage(EAvatarLanguage InLanguage)
 
   FTimerHandle Handle;
   auto HideLoadingScreen = FTimerDelegate::CreateLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)] {
-    if (ULog::ErrorIf(
-            !WeakController.IsValid(),
-            "AvatarsPlayerController this reference is not valid HideLoadingScreen lambda in AAvatarsPlayerController."
-        ))
-      return;
+    if (ULog::ErrorIf(!WeakController.IsValid(), "AvatarsPlayerController this reference is not valid HideLoadingScreen lambda in AAvatarsPlayerController.")) return;
 
     WeakController->EnableInput(WeakController.Get());
     WeakController->RootWidget->HideLoadingScreen();
@@ -433,9 +411,7 @@ void AAvatarsPlayerController::StopDialog()
   Avatar->StopDialog();
 }
 
-void AAvatarsPlayerController::DisplayAvatarMessage(
-    FString Message, FString AudioPath, const TArray<FString>& NewSuggestions, const TArray<FString>& ResponseTags
-)
+void AAvatarsPlayerController::DisplayAvatarMessage(FString Message, FString AudioPath, const TArray<FString>& NewSuggestions, const TArray<FString>& ResponseTags)
 {
   const bool bLongMessage = ResponseTags.Contains(TEXT("long_message"));
   if (bLongMessage)
@@ -550,9 +526,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   const bool bHasCustomCamera = SelectedAvatar->CheckCustomCamera(this);
   if (!bHasCustomCamera && bDebug)
   {
-    GEngine->AddOnScreenDebugMessage(
-        -1, 10.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera")
-    );
+    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera"));
   }
 
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
@@ -641,9 +615,7 @@ void AAvatarsPlayerController::StartChangeAvatarTimeout()
 
   // Convert timeout from seconds to minutes
   const float TimeoutInSeconds = ChangeAvatarTimeout.TimeoutDelay * 60.0f;
-  GetWorldTimerManager().SetTimer(
-      ChangeAvatarTimeout.TimerHandle, this, &AAvatarsPlayerController::OnAvatarChangeTimeout, TimeoutInSeconds, false
-  );
+  GetWorldTimerManager().SetTimer(ChangeAvatarTimeout.TimerHandle, this, &AAvatarsPlayerController::OnAvatarChangeTimeout, TimeoutInSeconds, false);
   if (bDebug) ULog::Info("Starting Change Avatar timer with timeout: " + ChangeAvatarTimeout.GetDelayAsText().ToString());
 }
 
@@ -683,9 +655,7 @@ void AAvatarsPlayerController::StartGreetingTimeout()
   IdleGreetingTimeout.ClearIfValid(GetWorld());
 
   const float TimeoutInSeconds = IdleGreetingTimeout.TimeoutDelay * 60.0f;
-  GetWorldTimerManager().SetTimer(
-      IdleGreetingTimeout.TimerHandle, this, &AAvatarsPlayerController::OnGreetingTimeout, TimeoutInSeconds, false
-  );
+  GetWorldTimerManager().SetTimer(IdleGreetingTimeout.TimerHandle, this, &AAvatarsPlayerController::OnGreetingTimeout, TimeoutInSeconds, false);
 }
 
 void AAvatarsPlayerController::OnGreetingTimeout()
@@ -717,9 +687,7 @@ void AAvatarsPlayerController::StartThinkingTimeout()
 
   ThinkingTimeout.ClearIfValid(GetWorld());
 
-  GetWorldTimerManager().SetTimer(
-      ThinkingTimeout.TimerHandle, this, &AAvatarsPlayerController::OnThinkingTimeout, ThinkingTimeout.TimeoutDelay, false
-  );
+  GetWorldTimerManager().SetTimer(ThinkingTimeout.TimerHandle, this, &AAvatarsPlayerController::OnThinkingTimeout, ThinkingTimeout.TimeoutDelay, false);
 }
 
 void AAvatarsPlayerController::OnThinkingTimeout()

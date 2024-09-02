@@ -14,7 +14,7 @@ struct FUserMessage
 
   FUserMessage() {}
 
-  FUserMessage(FString Text) : Text(Text) {}
+  FUserMessage(FString InText) : Text(InText) {}
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Text;

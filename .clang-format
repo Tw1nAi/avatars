@@ -1,6 +1,6 @@
 BasedOnStyle: Microsoft
 IndentWidth: 2
-ColumnLimit: 140
+ColumnLimit: 180
 PointerAlignment: Left
 DerivePointerAlignment: false
 AllowShortIfStatementsOnASingleLine: WithoutElse

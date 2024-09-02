@@ -25,7 +25,7 @@ void UWidgetBase::Show()
   bIsToggled = true; // side effect!!
   if (bIsInteractive)
   {
-    SetVisibility(ESlateVisibility::Visible);
+    SetVisibilityInternal(ESlateVisibility::Visible);
   }
   else
   {
@@ -47,7 +47,7 @@ void UWidgetBase::ShowDelayed()
 void UWidgetBase::Hide(const bool bShouldCollapse /*= true*/)
 {
   bIsToggled = false; // side effect!!
-  SetVisibility(bShouldCollapse ? ESlateVisibility::Collapsed : ESlateVisibility::Hidden);
+  SetVisibilityInternal(bShouldCollapse ? ESlateVisibility::Collapsed : ESlateVisibility::Hidden);
   HideNative();
 }
 
@@ -55,7 +55,7 @@ void UWidgetBase::ShowNotInteractive(const bool bAllowChildrenInteractive /*= tr
 {
   bIsToggled = true;      // side effect!!
   bIsInteractive = false; // side effect!!
-  SetVisibility(bAllowChildrenInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::SelfHitTestInvisible);
+  SetVisibilityInternal(bAllowChildrenInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::SelfHitTestInvisible);
   ShowNative();
 }
 

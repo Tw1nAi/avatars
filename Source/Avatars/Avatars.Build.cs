@@ -35,7 +35,7 @@ public class Avatars : ModuleRules
         "SlateCore"
     });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "UMGEditor", "UnrealEd" });
 
         if (Target.Configuration == UnrealTargetConfiguration.Debug || Target.Configuration == UnrealTargetConfiguration.DebugGame)
         {

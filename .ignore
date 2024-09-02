@@ -1,11 +1,11 @@
 /.git
 /.github
+/.vs
 /.vscode
 /Content
+/DerivedDataCache
 /Documents
 /Intermediate
-/Model_temp
-/Model_v1
 /Saved
 /Screenshots
 /Scripts
@@ -13,5 +13,3 @@
 /Whisper
 /Plugins/OpenAIAPI/Content
 /Plugins/OpenAIAPI/Intermediate
-/Plugins/RuntimeAudioImporter/Content
-/Plugins/RuntimeAudioImporter/Intermediate
