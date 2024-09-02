@@ -21,6 +21,7 @@ enum class ESettingType : uint8
 {
   OnOff UMETA(DisplayName = "ON / OFF"),
   Quality UMETA(DisplayName = "Quality"),
+  WindowMode UMETA(DIsplayName = "Window Mode"),
   Custom UMETA(DisplayName = "Custom")
 };
 
@@ -108,10 +109,27 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TArray<FSettingDefinition> DefaultSettings;
 
+protected:
+  void InitWindowMode();
+  void OnWindowModeChange(const int32 Index);
+
+public:
+  /* Array of labeled default options used in named lists. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
+  TArray<FText> WindowModeLabels;
+
   /* Array of labeled default options used in named lists. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TArray<FText> QualityOptionsLabels;
 
+  // Frame rate settings
+protected:
+  void InitFrameRate();
+  UPROPERTY(BlueprintReadOnly)
+  TObjectPtr<USelectionWidgetBase> FrameRateWidget;
+  void AddFrameRateLimitOption(const int32 Limit, const FText& OptionalLabel = FText::GetEmpty());
+
+public:
   /* List of available frame rate limits in the game settings. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TArray<int32> FrameRateOptions;
@@ -168,7 +186,6 @@ protected:
   void InitResolution();
   UFUNCTION()
   void OnResolutionChanged(const int32 NewIndex);
-
   /* This should automatically be filled with resolutions available for main screen. */
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   TArray<FIntPoint> Resolutions;
@@ -176,15 +193,6 @@ protected:
   void InitVSync();
   UFUNCTION()
   void OnVSyncChanged(const int32 NewIndex);
-
-  void InitFrameRate();
-
-  UPROPERTY(BlueprintReadOnly)
-  TObjectPtr<USelectionWidgetBase> FrameRateWidget;
-
-  void AddFrameRateLimitOption(const int32 Limit, const FText& OptionalLabel = FText::GetEmpty());
-
-  // UserSettings->SetFullscreenMode(EWindowMode::Windowed);
 
   void InitAllSettings();
 

@@ -16,7 +16,7 @@ DEFINE_LOG_CATEGORY(LogGraphicsSettingsWidgetBase);
 namespace
 {
 // clang-format off
-  // static FString WindowModeLabel(TEXT("Window Mode"));
+  static const FString WindowModeName(TEXT("Window Mode"));
   static const FString ResolutionName(TEXT("Resolution"));
   static const FString VSyncName(TEXT("VSync"));
   static const FString FrameRateName(TEXT("Frame Rate"));
@@ -26,12 +26,30 @@ namespace
   static const FString VisualEffectsName(TEXT("Visual Effects Quality"));
   static const FString ShadowsName(TEXT("Shadows Quality"));
 
+static int32 WindowModeToInt(EWindowMode::Type Mode)
+{
+  switch(Mode)
+  {
+  case EWindowMode::Type::Fullscreen: return 0;
+  case EWindowMode::Type::WindowedFullscreen: return 1;
+  case EWindowMode::Type::Windowed : return 2;
+    default:
+      UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("%s"), *"Invalid Window Mode");
+  }
+  checkNoEntry();
+  return 0;
+}
+
 // clang-format on
 } // namespace
 
 UGraphicsSettingsWidgetBase::UGraphicsSettingsWidgetBase()
 {
   LabelMinWidth = 200.0f;
+
+  WindowModeLabels.Emplace(FText::FromString(TEXT("Fullscreen")));
+  WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed Fullscreen")));
+  WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed")));
 
   QualityOptionsLabels.Emplace(FText::FromString(TEXT("Low")));
   QualityOptionsLabels.Emplace(FText::FromString(TEXT("Medium")));
@@ -67,6 +85,7 @@ void UGraphicsSettingsWidgetBase::NativePreConstruct()
 {
 // Call this to visualise widgets in the editor
 #if WITH_EDITOR
+  BuildNamedTypes();
   GenerateDefaultOptionsWidgets();
 #endif
 }
@@ -74,6 +93,7 @@ void UGraphicsSettingsWidgetBase::NativePreConstruct()
 void UGraphicsSettingsWidgetBase::BuildNamedTypes()
 {
   DefaultNamesWithTypes.Reset();
+  AddNameWithType(WindowModeName, ESettingType::WindowMode);
   AddNameWithType(ResolutionName, ESettingType::Custom);
   AddNameWithType(VSyncName, ESettingType::OnOff);
   AddNameWithType(FrameRateName, ESettingType::Custom);
@@ -111,8 +131,6 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
   }
   OptionsContainer->ClearChildren();
 
-  // BuildNamedTypes();
-
   for (int32 i = 0; i < DefaultSettings.Num(); i++)
   {
     FSettingDefinition& Setting = DefaultSettings[i];
@@ -141,6 +159,11 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
 
     UHorizontalBox* HorizontalBox = NewObject<UHorizontalBox>(this);
     UTextBlock* Label = NewObject<UTextBlock>(this);
+
+    if (Setting.Label.IsEmpty())
+    {
+      Setting.Label = FText::FromString(Setting.DefaultSettingName);
+    }
 
     Label->SetText(Setting.Label);
     Label->SetFont(LabelFont);
@@ -172,6 +195,13 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
         SelectionWidget->AddOption(Option.GetCopy());
       }
       break;
+
+    case ESettingType::WindowMode:
+      for (const FText& OptionText : WindowModeLabels)
+      {
+        SelectionWidget->AddOption(FSelectionOption(OptionText));
+      }
+      break;
     }
 
     SelectionWidget->SetCurrentSelection(0);
@@ -191,6 +221,7 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
 
 void UGraphicsSettingsWidgetBase::InitAllSettings()
 {
+  InitWindowMode();
   InitResolution();
   InitVSync();
   InitFrameRate();
@@ -279,6 +310,45 @@ void UGraphicsSettingsWidgetBase::OnVSyncChanged(const int32 NewIndex)
 {
   GameUserSettings->SetVSyncEnabled(NewIndex == 0 ? false : true);
   GameUserSettings->ApplySettings(false);
+}
+
+void UGraphicsSettingsWidgetBase::OnWindowModeChange(const int32 Index)
+{
+  UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("New window mode set to index: %d"), Index);
+  GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(Index));
+  GameUserSettings->ApplySettings(false);
+}
+
+void UGraphicsSettingsWidgetBase::InitWindowMode()
+{
+  USelectionWidgetBase* WindowModeWidget = GetSettingWidget(WindowModeName);
+  if (!WindowModeWidget)
+  {
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("WindowModeWidget  is not set"));
+    return;
+  }
+
+  WindowModeWidget->OptionName = WindowModeName;
+  WindowModeWidget->Clear();
+
+  EWindowMode::Type CurrentMode = GameUserSettings->GetLastConfirmedFullscreenMode();
+  const int32 ModeInt = WindowModeToInt(CurrentMode);
+
+  for (int32 i = 0; i < WindowModeLabels.Num(); i++)
+  {
+    const FText& ModeText = WindowModeLabels[i];
+    FSelectionOption Option;
+    Option.Label = ModeText;
+    Option.IntValue = i;
+    WindowModeWidget->AddOption(Option);
+
+    if (i == ModeInt)
+    {
+      WindowModeWidget->SetCurrentSelection(i);
+    }
+  }
+
+  WindowModeWidget->OnSelectionChanged.BindUObject(this, &UGraphicsSettingsWidgetBase::OnWindowModeChange);
 }
 
 void UGraphicsSettingsWidgetBase::AddFrameRateLimitOption(const int32 Limit, const FText& OptionalLabel)
