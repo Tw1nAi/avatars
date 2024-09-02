@@ -2,15 +2,11 @@
 
 #pragma once
 
-#include "Blueprint/WidgetTree.h"
-#include "Components/CheckBox.h"
-#include "Components/ComboBoxString.h"
 #include "Components/VerticalBox.h"
 #include "CoreMinimal.h"
 
-#include "ComboBoxStringWidgetBase.h"
-#include "Framerate.h"
 #include "SelectionWidgetBase.h"
+#include "SettingsTypes.h"
 #include "WidgetBase.h"
 
 #include "GraphicsSettingsWidgetBase.generated.h"
@@ -20,20 +16,25 @@ DECLARE_LOG_CATEGORY_EXTERN(LogGraphicsSettingsWidgetBase, Log, All);
 class UGameUserSettings;
 class UComboBoxStringWidgetBase;
 
-typedef int32 (UGameUserSettings::*GetFunc)() const;
-typedef void (UGameUserSettings::*SetFunc)(int32);
+UENUM(BlueprintType, Blueprintable)
+enum class ESettingType : uint8
+{
+  OnOff UMETA(DisplayName = "ON / OFF"),
+  Quality UMETA(DisplayName = "Quality"),
+  Custom UMETA(DisplayName = "Custom")
+};
 
 USTRUCT()
-struct FNameWithType
+struct FNamedSettingType
 {
   GENERATED_BODY()
 
-  FNameWithType() = default;
+  FNamedSettingType() = default;
 
   // clang-format off
-  FNameWithType(
+  FNamedSettingType(
     const FString InName,
-    const ESettingComponentType InType,
+    const ESettingType InType,
     const GetFunc InGetter = nullptr,
     const SetFunc InSetter = nullptr
   ) :
@@ -45,27 +46,19 @@ struct FNameWithType
   // clang-format on
 
   FString Name;
-  ESettingComponentType Type;
+  ESettingType Type;
   GetFunc Getter = nullptr;
   SetFunc Setter = nullptr;
 };
 
-UENUM()
-enum class ESettingComponentType : uint8
-{
-  ComboBoxString,
-  CheckBox,
-  Selection,
-};
-
 USTRUCT(BlueprintType)
-struct FSettingDef
+struct FSettingDefinition
 {
   GENERATED_BODY()
 
-  FSettingDef() = default;
-  FSettingDef(const FString& InDefaultSettingName, ESettingComponentType const InComponentType, const GetFunc InGetter = nullptr, const SetFunc InSetter = nullptr)
-      : DefaultSettingName(InDefaultSettingName), ComponentType(InComponentType), Getter(InGetter), Setter(InSetter)
+  FSettingDefinition() = default;
+  FSettingDefinition(const FString& InDefaultSettingName, ESettingType const InComponentType, const GetFunc InGetter = nullptr, const SetFunc InSetter = nullptr)
+      : DefaultSettingName(InDefaultSettingName), SettingType(InComponentType), Getter(InGetter), Setter(InSetter)
   {
   }
 
@@ -73,15 +66,15 @@ struct FSettingDef
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FText Label = FText::GetEmpty();
 
-  /* Name of the default setting provided with the engine. Will be filled automatically for default settings. */
+  /* Name of the default setting provided with the engine. Will be filled automatically for default settings and should be empty for custom settings. */
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   FString DefaultSettingName;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  ESettingComponentType ComponentType;
+  ESettingType SettingType;
 
   UPROPERTY()
-  UWidget* WidgetInstance = nullptr;
+  USelectionWidgetBase* WidgetInstance = nullptr;
   GetFunc Getter = nullptr;
   SetFunc Setter = nullptr;
 };
@@ -109,21 +102,23 @@ public:
   TSubclassOf<UPanelWidget> OptionsContainerClass = UVerticalBox::StaticClass();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  TSubclassOf<UCheckBox> CheckBoxClass;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  TSubclassOf<UComboBoxStringWidgetBase> ComboBoxStringClass;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TSubclassOf<USelectionWidgetBase> SelectionWidgetBaseClass;
 
   /* Default settings are provided with the engine. Here you can change the text labels that can be localised. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  TArray<FSettingDef> DefaultSettings;
+  TArray<FSettingDefinition> DefaultSettings;
 
   /* Array of labeled default options used in named lists. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  TArray<FSelectionOption> DefaultOptionsRange;
+  TArray<FText> QualityOptionsLabels;
+
+  /* List of available frame rate limits in the game settings. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
+  TArray<int32> FrameRateOptions;
+
+  /* Label for uncapped frame rate, rest of the frame rate limits are displayed as numbers. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
+  FText UncappedFrameRateName;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings|Label")
   FSlateFontInfo LabelFont;
@@ -145,39 +140,22 @@ public:
   bool bResetWidgetTypes = false;
 
 protected:
-  template <typename T> T* CreateSettingWidget(const ESettingComponentType ComponentType)
+  template <typename T> T* CreateSettingWidget()
   {
-    UWidget* SettingWidget = nullptr;
-    TSubclassOf<UWidget> WidgetClass;
-
-    switch (ComponentType)
-    {
-    case ESettingComponentType::ComboBoxString:
-      SettingWidget = NewObject<UComboBoxStringWidgetBase>(this, ComboBoxStringClass);
-      break;
-    case ESettingComponentType::CheckBox:
-      SettingWidget = NewObject<UCheckBox>(this, CheckBoxClass);
-      break;
-    case ESettingComponentType::Selection:
-      SettingWidget = NewObject<USelectionWidgetBase>(this, SelectionWidgetBaseClass);
-      break;
-    default:
-      UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("Unknown setting component type %d"), static_cast<int32>(ComponentType));
-      return nullptr;
-    }
+    UWidget* SettingWidget = NewObject<USelectionWidgetBase>(this, SelectionWidgetBaseClass);
 
     T* SettingWidgetCast = Cast<T>(SettingWidget);
 
     return SettingWidgetCast;
   }
 
-  template <typename T> T* GetSettingWidget(const FString& SettingName)
+  USelectionWidgetBase* GetSettingWidget(const FString& SettingName)
   {
-    for (FSettingDef& Setting : DefaultSettings)
+    for (FSettingDefinition& Setting : DefaultSettings)
     {
       if (Setting.DefaultSettingName == SettingName)
       {
-        return Cast<T>(Setting.WidgetInstance);
+        return Setting.WidgetInstance;
       }
     }
 
@@ -187,11 +165,9 @@ protected:
   UPROPERTY()
   TObjectPtr<UGameUserSettings> GameUserSettings;
 
-  void InitResolutionComboBox();
+  void InitResolution();
   UFUNCTION()
-  void OnResolutionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
-  UPROPERTY(BlueprintReadOnly)
-  TObjectPtr<UComboBoxString> ResolutionComboBox;
+  void OnResolutionChanged(const int32 NewIndex);
 
   /* This should automatically be filled with resolutions available for main screen. */
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -199,24 +175,25 @@ protected:
 
   void InitVSync();
   UFUNCTION()
-  void OnVSyncChanged(const bool bIsChecked);
-  UPROPERTY(BlueprintReadOnly)
-  TObjectPtr<UCheckBox> VSyncCheckBox;
+  void OnVSyncChanged(const int32 NewIndex);
 
-  void InitFramerate();
+  void InitFrameRate();
+
   UPROPERTY(BlueprintReadOnly)
-  TObjectPtr<USelectionWidgetBase> FramerateWidget;
+  TObjectPtr<USelectionWidgetBase> FrameRateWidget;
+
+  void AddFrameRateLimitOption(const int32 Limit, const FText& OptionalLabel = FText::GetEmpty());
 
   // UserSettings->SetFullscreenMode(EWindowMode::Windowed);
 
   void InitAllSettings();
 
   UPROPERTY()
-  TArray<FNameWithType> DefaultNamesWithTypes;
+  TArray<FNamedSettingType> DefaultNamesWithTypes;
 
-  void AddNameWithType(FString Name, ESettingComponentType Type, GetFunc Getter = nullptr, SetFunc Setter = nullptr)
+  void AddNameWithType(const FString& Name, const ESettingType Type, const GetFunc Getter = nullptr, const SetFunc Setter = nullptr)
   {
-    DefaultNamesWithTypes.Push(FNameWithType(Name, Type, Getter, Setter));
+    DefaultNamesWithTypes.Emplace(FNamedSettingType(Name, Type, Getter, Setter));
   }
 
   void BuildNamedTypes();

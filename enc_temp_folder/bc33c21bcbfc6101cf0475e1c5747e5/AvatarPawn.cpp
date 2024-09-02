@@ -44,11 +44,6 @@ AAvatarPawn::AAvatarPawn()
 void AAvatarPawn::BeginPlay()
 {
   Super::BeginPlay();
-
-  if (CustomCamera)
-  {
-    CameraInitialLocation = CustomCamera->GetActorLocation();
-  }
 }
 
 void AAvatarPawn::StartAudioStream()
@@ -89,10 +84,23 @@ FAiIdentity& AAvatarPawn::GetIdentity()
 
 void AAvatarPawn::ApplySettings(FAvatarSettings& Settings)
 {
+  // if (Settings.bDebug)
+  // {
+  //   bDebug = Settings.bDebug;
+  // }
+
+  // if (Settings.MeshScale != 0.0)
+  // {
+  //   SceneSetup.MeshScale = Settings.MeshScale;
+  //   if (BodyMeshComponent != nullptr)
+  //   {
+  //     BodyMeshComponent->SetRelativeScale3D(FVector(Settings.MeshScale));
+  //   }
+  // }
   AddCameraLocation(Settings.CameraSettings.CameraOffset);
 }
 
-bool AAvatarPawn::CheckCustomCamera(APlayerController* NewController) const
+bool AAvatarPawn::CheckCustomCamera(APlayerController* NewController)
 {
   if (CustomCamera == nullptr || NewController == nullptr)
   {
@@ -100,6 +108,7 @@ bool AAvatarPawn::CheckCustomCamera(APlayerController* NewController) const
   }
 
   NewController->SetViewTarget(CustomCamera);
+  CameraInitialLocation = CustomCamera->GetActorLocation();
 
   return true;
 }

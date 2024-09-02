@@ -155,7 +155,7 @@ public:
 
   /* Check if avatar has its custom camera actor reference set and stet that camera to active. Return false if no custom camera was found.
    */
-  bool CheckCustomCamera(APlayerController* NewController) const;
+  bool CheckCustomCamera(APlayerController* NewController);
 
   /* Use value between 0 and 1 to scale zoom between min and max values/ */
   UFUNCTION(BlueprintCallable)

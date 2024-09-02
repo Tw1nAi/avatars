@@ -3,11 +3,12 @@
 #include "GraphicsSettingsWidgetBase.h"
 
 #include "Components/CheckBox.h"
-#include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Kismet/KismetSystemLibrary.h"
+
+#include "Framerate.h"
 
 DEFINE_LOG_CATEGORY(LogGraphicsSettingsWidgetBase);
 
@@ -15,30 +16,13 @@ DEFINE_LOG_CATEGORY(LogGraphicsSettingsWidgetBase);
 namespace
 {
 // clang-format off
-  static const EFramerate FramerateOptions[] = {
-      EFramerate::FPS_30,
-      EFramerate::FPS_45,
-      EFramerate::FPS_60,
-      EFramerate::FPS_90,
-      EFramerate::FPS_120,
-      EFramerate::FPS_Uncapped
-    };
-
-  static const FString RangeLabels[] = {
-      TEXT("Low"),
-      TEXT("Medium"),
-      TEXT("High"),
-      TEXT("Epic"),
-      TEXT("Cinematic")
-    };
-
   // static FString WindowModeLabel(TEXT("Window Mode"));
   static const FString ResolutionName(TEXT("Resolution"));
   static const FString VSyncName(TEXT("VSync"));
-  static const FString FramerateName(TEXT("Frame Rate"));
+  static const FString FrameRateName(TEXT("Frame Rate"));
   static const FString ShadingName(TEXT("Shading Quality"));
   static const FString GlobalIlluminationName(TEXT("Global Illumination Quality"));
-  static const FString PostProccessName(TEXT("PostProcess Quality"));
+  static const FString PostProcessName(TEXT("PostProcess Quality"));
   static const FString VisualEffectsName(TEXT("Visual Effects Quality"));
   static const FString ShadowsName(TEXT("Shadows Quality"));
 
@@ -49,17 +33,26 @@ UGraphicsSettingsWidgetBase::UGraphicsSettingsWidgetBase()
 {
   LabelMinWidth = 200.0f;
 
-  for (const FString Label : RangeLabels)
-  {
-    DefaultOptionsRange.Push(FSelectionOption(FText::FromString(Label)));
-  }
+  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Low")));
+  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Medium")));
+  QualityOptionsLabels.Emplace(FText::FromString(TEXT("High")));
+  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Epic")));
+  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Cinematic")));
+
+  UncappedFrameRateName = FText::FromString(TEXT("Uncapped"));
+  FrameRateOptions.Add(30);
+  FrameRateOptions.Add(45);
+  FrameRateOptions.Add(60);
+  FrameRateOptions.Add(90);
+  FrameRateOptions.Add(120);
 
   BuildNamedTypes();
 
-  for (const FNameWithType& SettingName : DefaultNamesWithTypes)
+  for (const FNamedSettingType& SettingName : DefaultNamesWithTypes)
   {
-    FSettingDef DefaultSetting(SettingName.Name, SettingName.Type);
-    DefaultSettings.Push(DefaultSetting);
+    UE_LOG(LogGraphicsSettingsWidgetBase, Log, TEXT("Building default graphic settings for: %s"), *SettingName.Name);
+    FSettingDefinition DefaultSetting(SettingName.Name, SettingName.Type);
+    DefaultSettings.Emplace(DefaultSetting);
   }
 }
 
@@ -81,14 +74,14 @@ void UGraphicsSettingsWidgetBase::NativePreConstruct()
 void UGraphicsSettingsWidgetBase::BuildNamedTypes()
 {
   DefaultNamesWithTypes.Reset();
-  AddNameWithType(ResolutionName, ESettingComponentType::ComboBoxString, nullptr, nullptr);
-  AddNameWithType(VSyncName, ESettingComponentType::CheckBox, nullptr, nullptr);
-  AddNameWithType(FramerateName, ESettingComponentType::Selection, nullptr, nullptr);
-  AddNameWithType(ShadingName, ESettingComponentType::Selection, &UGameUserSettings::GetShadingQuality, &UGameUserSettings::SetShadingQuality);
-  AddNameWithType(GlobalIlluminationName, ESettingComponentType::Selection, &UGameUserSettings::GetGlobalIlluminationQuality, &UGameUserSettings::SetGlobalIlluminationQuality);
-  AddNameWithType(PostProccessName, ESettingComponentType::Selection, &UGameUserSettings::GetPostProcessingQuality, &UGameUserSettings::SetPostProcessingQuality);
-  AddNameWithType(VisualEffectsName, ESettingComponentType::Selection, &UGameUserSettings::GetVisualEffectQuality, &UGameUserSettings::SetVisualEffectQuality);
-  AddNameWithType(ShadowsName, ESettingComponentType::Selection, &UGameUserSettings::GetShadowQuality, &UGameUserSettings::SetShadowQuality);
+  AddNameWithType(ResolutionName, ESettingType::Custom);
+  AddNameWithType(VSyncName, ESettingType::OnOff);
+  AddNameWithType(FrameRateName, ESettingType::Custom);
+  AddNameWithType(ShadingName, ESettingType::Quality, &UGameUserSettings::GetShadingQuality, &UGameUserSettings::SetShadingQuality);
+  AddNameWithType(GlobalIlluminationName, ESettingType::Quality, &UGameUserSettings::GetGlobalIlluminationQuality, &UGameUserSettings::SetGlobalIlluminationQuality);
+  AddNameWithType(PostProcessName, ESettingType::Quality, &UGameUserSettings::GetPostProcessingQuality, &UGameUserSettings::SetPostProcessingQuality);
+  AddNameWithType(VisualEffectsName, ESettingType::Quality, &UGameUserSettings::GetVisualEffectQuality, &UGameUserSettings::SetVisualEffectQuality);
+  AddNameWithType(ShadowsName, ESettingType::Quality, &UGameUserSettings::GetShadowQuality, &UGameUserSettings::SetShadowQuality);
 }
 
 void UGraphicsSettingsWidgetBase::ResetDefaultSettings()
@@ -97,25 +90,15 @@ void UGraphicsSettingsWidgetBase::ResetDefaultSettings()
   const int32 Length = DefaultSettings.Num();
   for (int32 i = 0; i < Length; i++)
   {
-    const FNameWithType& FNameWithType = DefaultNamesWithTypes[i];
-    FSettingDef& DefaultSetting = DefaultSettings[i];
-    if (bResetLabels) DefaultSetting.DefaultSettingName = FNameWithType.Name;
-    if (bResetWidgetTypes) DefaultSetting.ComponentType = FNameWithType.Type;
+    const FNamedSettingType& NameWithType = DefaultNamesWithTypes[i];
+    FSettingDefinition& DefaultSetting = DefaultSettings[i];
+    if (bResetLabels) DefaultSetting.DefaultSettingName = NameWithType.Name;
+    if (bResetWidgetTypes) DefaultSetting.SettingType = NameWithType.Type;
   }
 }
 
 void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
 {
-  if (!CheckBoxClass)
-  {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("CheckBoxClass is not set"));
-    return;
-  }
-  if (!ComboBoxStringClass)
-  {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("ComboBoxStringClass is not set"));
-    return;
-  }
   if (!SelectionWidgetBaseClass)
   {
     UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("SelectionWidgetBaseClass is not set"));
@@ -128,19 +111,29 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
   }
   OptionsContainer->ClearChildren();
 
-  BuildNamedTypes();
+  // BuildNamedTypes();
 
   for (int32 i = 0; i < DefaultSettings.Num(); i++)
   {
-    FSettingDef& Setting = DefaultSettings[i];
+    FSettingDefinition& Setting = DefaultSettings[i];
     Setting.Getter = DefaultNamesWithTypes[i].Getter;
     Setting.Setter = DefaultNamesWithTypes[i].Setter;
 
-    UWidget* SettingWidget = CreateSettingWidget<UWidget>(Setting.ComponentType);
+    UWidget* SettingWidget = NewObject<USelectionWidgetBase>(this, SelectionWidgetBaseClass);
 
     if (SettingWidget == nullptr)
     {
       FString Message = FString::Printf(TEXT("Failed to create widget for setting %s"), *Setting.DefaultSettingName);
+      UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("%s"), *Message);
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+      continue;
+    }
+
+    USelectionWidgetBase* SelectionWidget = Cast<USelectionWidgetBase>(SettingWidget);
+
+    if (SelectionWidget == nullptr)
+    {
+      FString Message = FString::Printf(TEXT("Failed to create selection widget for setting %s"), *Setting.DefaultSettingName);
       UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("%s"), *Message);
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       continue;
@@ -154,19 +147,34 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     Label->SetMinDesiredWidth(LabelMinWidth);
     UHorizontalBoxSlot* LabelSlot = Cast<UHorizontalBoxSlot>(HorizontalBox->AddChild(Label));
     LabelSlot->SetPadding(SettingsItemMargin);
-    HorizontalBox->AddChild(SettingWidget);
 
-    if (USelectionWidgetBase* SelectionWidget = Cast<USelectionWidgetBase>(SettingWidget))
+    UPanelSlot* PanelSlot = HorizontalBox->AddChild(SettingWidget);
+    if (UHorizontalBoxSlot* RowSlot = Cast<UHorizontalBoxSlot>(PanelSlot))
     {
-      if (Setting.Getter && Setting.Setter)
-      {
-        for (const FSelectionOption& Option : DefaultOptionsRange)
-        {
-          SelectionWidget->AddOption(Option.GetCopy());
-        }
-        SelectionWidget->SetCurrentSelection(0);
-      }
+      RowSlot->SetHorizontalAlignment(HAlign_Fill);
+      RowSlot->SetVerticalAlignment(VAlign_Center);
     }
+
+    FSelectionOption OffOption(FText::FromString(TEXT("Off")));
+    FSelectionOption OnOption(FText::FromString(TEXT("On")));
+
+    switch (Setting.SettingType)
+    {
+    case ESettingType::OnOff:
+
+      SelectionWidget->AddOption(OffOption);
+      SelectionWidget->AddOption(OnOption);
+      break;
+
+    case ESettingType::Quality:
+      for (const FSelectionOption& Option : QualityOptionsLabels)
+      {
+        SelectionWidget->AddOption(Option.GetCopy());
+      }
+      break;
+    }
+
+    SelectionWidget->SetCurrentSelection(0);
 
     if (OptionsContainer && OptionsContainer->IsA<UPanelWidget>())
     {
@@ -177,17 +185,17 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
       UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("OptionsContainer is not a UPanelWidget"));
     }
 
-    Setting.WidgetInstance = SettingWidget;
+    Setting.WidgetInstance = SelectionWidget;
   }
 }
 
 void UGraphicsSettingsWidgetBase::InitAllSettings()
 {
-  InitResolutionComboBox();
+  InitResolution();
   InitVSync();
-  InitFramerate();
+  InitFrameRate();
 
-  for (const FSettingDef& Setting : DefaultSettings)
+  for (const FSettingDefinition& Setting : DefaultSettings)
   {
     UWidget* SettingWidget = Setting.WidgetInstance;
 
@@ -216,22 +224,24 @@ void UGraphicsSettingsWidgetBase::InitAllSettings()
   }
 }
 
-void UGraphicsSettingsWidgetBase::InitResolutionComboBox()
+void UGraphicsSettingsWidgetBase::InitResolution()
 {
-  ResolutionComboBox = GetSettingWidget<UComboBoxStringWidgetBase>(ResolutionName)->ComboBox;
-  if (!ResolutionComboBox)
+  USelectionWidgetBase* ResolutionsWidget = GetSettingWidget(ResolutionName);
+  if (!ResolutionsWidget)
   {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("ResolutionComboBox is not set"));
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("ResolutionsWidget is not set"));
     return;
   }
 
   Resolutions.Reset();
   UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
 
-  ResolutionComboBox->ClearOptions();
+  ResolutionsWidget->Clear();
   for (const FIntPoint& Resolution : Resolutions)
   {
-    ResolutionComboBox->AddOption(FString::Printf(TEXT("%dx%d"), Resolution.X, Resolution.Y));
+    FSelectionOption Option;
+    Option.Label = FText::FromString(FString::Printf(TEXT("%d x %d"), Resolution.X, Resolution.Y));
+    ResolutionsWidget->AddOption(Option);
   }
 
   // find current resolutions index
@@ -240,72 +250,84 @@ void UGraphicsSettingsWidgetBase::InitResolutionComboBox()
 
   check(CurrentResolutionIndex != INDEX_NONE && CurrentResolutionIndex > 0);
 
-  ResolutionComboBox->SetSelectedIndex(CurrentResolutionIndex);
+  ResolutionsWidget->SetCurrentSelection(CurrentResolutionIndex);
 
-  ResolutionComboBox->OnSelectionChanged.Clear();
-  ResolutionComboBox->OnSelectionChanged.AddDynamic(this, &UGraphicsSettingsWidgetBase::OnResolutionChanged);
+  ResolutionsWidget->OnSelectionChanged.BindUObject(this, &UGraphicsSettingsWidgetBase::OnResolutionChanged);
 }
 
-void UGraphicsSettingsWidgetBase::OnResolutionChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
+void UGraphicsSettingsWidgetBase::OnResolutionChanged(const int32 NewIndex)
 {
-  const FIntPoint Resolution = Resolutions[ResolutionComboBox->GetSelectedIndex()];
+  const FIntPoint Resolution = Resolutions[NewIndex];
   GameUserSettings->SetScreenResolution(Resolution);
   GameUserSettings->ApplySettings(false);
 }
 
 void UGraphicsSettingsWidgetBase::InitVSync()
 {
-  VSyncCheckBox = GetSettingWidget<UCheckBox>(VSyncName);
-  if (!VSyncCheckBox)
+  USelectionWidgetBase* VSyncWidget = GetSettingWidget(VSyncName);
+  if (!VSyncWidget)
   {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("VSyncCheckBox is not set"));
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("VSyncWidget is not set"));
     return;
   }
 
-  VSyncCheckBox->SetCheckedState(GameUserSettings->IsVSyncEnabled() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
-  VSyncCheckBox->OnCheckStateChanged.Clear();
-  VSyncCheckBox->OnCheckStateChanged.AddDynamic(this, &UGraphicsSettingsWidgetBase::OnVSyncChanged);
+  VSyncWidget->SetCurrentSelection(GameUserSettings->IsVSyncEnabled() ? 1 : 0);
+  VSyncWidget->OnSelectionChanged.BindUObject(this, &UGraphicsSettingsWidgetBase::OnVSyncChanged);
 }
 
-void UGraphicsSettingsWidgetBase::OnVSyncChanged(const bool bIsChecked)
+void UGraphicsSettingsWidgetBase::OnVSyncChanged(const int32 NewIndex)
 {
-  GameUserSettings->SetVSyncEnabled(bIsChecked);
+  GameUserSettings->SetVSyncEnabled(NewIndex == 0 ? false : true);
   GameUserSettings->ApplySettings(false);
 }
 
-void UGraphicsSettingsWidgetBase::InitFramerate()
+void UGraphicsSettingsWidgetBase::AddFrameRateLimitOption(const int32 Limit, const FText& OptionalLabel)
 {
-  FramerateWidget = GetSettingWidget<USelectionWidgetBase>(FramerateName);
-  if (!FramerateWidget)
+  FSelectionOption Option;
+  Option.Label = OptionalLabel.IsEmpty() ? FText::FromString(FString::Printf(TEXT("%d"), Limit)) : OptionalLabel;
+  Option.IntValue = Limit;
+  FrameRateWidget->AddOption(Option);
+}
+
+void UGraphicsSettingsWidgetBase::InitFrameRate()
+{
+  FrameRateWidget = GetSettingWidget(FrameRateName);
+  if (!FrameRateWidget)
   {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("Frame Rate Widget is not set"));
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("FrameRateWidget is not set"));
     return;
   }
 
-  FramerateWidget->OptionName = FramerateName;
-  FramerateWidget->Clear();
+  FrameRateWidget->OptionName = FrameRateName;
+  FrameRateWidget->Clear();
 
-  int Index = 0;
+  // Add option value of 0 representing uncapped frame rate at index 0
+  FrameRateOptions.Insert(0, 0);
 
-  const float CurrentFramerate = GameUserSettings->GetFrameRateLimit();
-  for (const EFramerate Framerate : FramerateOptions)
+  int OptIndex = 0;
+  const int32 CurrentFrameRate = FMath::RoundToInt(GameUserSettings->GetFrameRateLimit());
+  for (const int32 FrameLimit : FrameRateOptions)
   {
-    FSelectionOption Option;
-    Option.Label = FText::FromString(UFramerateUtils::EnumToString(Framerate));
-    Option.IntValue = UFramerateUtils::EnumToValue(Framerate);
-    FramerateWidget->AddOption(Option);
-
-    if (CurrentFramerate == Option.IntValue)
+    if (OptIndex == 0)
     {
-      FramerateWidget->SetCurrentSelection(Index);
+      AddFrameRateLimitOption(0, UncappedFrameRateName);
+    }
+    else
+    {
+      AddFrameRateLimitOption(FrameLimit);
     }
 
-    Index++;
+    if (CurrentFrameRate == FrameLimit)
+    {
+      FrameRateWidget->SetCurrentSelection(OptIndex);
+    }
+
+    OptIndex++;
   }
 
-  FramerateWidget->OnSelectionChanged.BindLambda([this](int32 Index) {
-    const int32 Framerate = FramerateWidget->GetSelectedOption().IntValue;
-    GameUserSettings->SetFrameRateLimit(Framerate);
+  FrameRateWidget->OnSelectionChanged.BindLambda([this](const int32 Index) {
+    const int32 FrameRate = FrameRateOptions[Index];
+    GameUserSettings->SetFrameRateLimit(FrameRate);
     GameUserSettings->ApplySettings(false);
   });
 }
