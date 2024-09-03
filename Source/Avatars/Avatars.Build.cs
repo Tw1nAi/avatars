@@ -4,12 +4,12 @@ using UnrealBuildTool;
 
 public class Avatars : ModuleRules
 {
-    public Avatars(ReadOnlyTargetRules Target) : base(Target)
-    {
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+  public Avatars(ReadOnlyTargetRules Target) : base(Target)
+  {
+    PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        // custom modules
-        PublicDependencyModuleNames.AddRange(new string[] {
+    // custom modules
+    PublicDependencyModuleNames.AddRange(new string[] {
         "WidgetsToolkit",
         "TextHelpers",
         "AiIntellect",
@@ -20,8 +20,8 @@ public class Avatars : ModuleRules
         "AiIdentity"
     });
 
-        // engine modules
-        PublicDependencyModuleNames.AddRange(new string[] {
+    // engine modules
+    PublicDependencyModuleNames.AddRange(new string[] {
         "Core",
         "CoreUObject",
         "Engine",
@@ -35,23 +35,23 @@ public class Avatars : ModuleRules
         "SlateCore"
     });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem", "UMGEditor", "UnrealEd" });
+    PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });
 
-        if (Target.Configuration == UnrealTargetConfiguration.Debug || Target.Configuration == UnrealTargetConfiguration.DebugGame)
-        {
-            PublicDefinitions.Add("UE_DEBUG_GC=1");
-        }
-
-        PublicIncludePaths.AddRange(
-            new string[] {
-                "Avatars/Public/Utils/Public"
-            }
-        );
-
-        PrivateIncludePaths.AddRange(
-            new string[] {
-                "Avatars/Private/Utils/Private"
-            }
-        );
+    if (Target.Configuration == UnrealTargetConfiguration.Debug || Target.Configuration == UnrealTargetConfiguration.DebugGame)
+    {
+      PublicDefinitions.Add("UE_DEBUG_GC=1");
     }
+
+    PublicIncludePaths.AddRange(
+        new string[] {
+                "Avatars/Public/Utils/Public"
+        }
+    );
+
+    PrivateIncludePaths.AddRange(
+        new string[] {
+                "Avatars/Private/Utils/Private"
+        }
+    );
+  }
 }

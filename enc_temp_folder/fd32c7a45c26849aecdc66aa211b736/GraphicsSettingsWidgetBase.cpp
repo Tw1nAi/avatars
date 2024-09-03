@@ -314,6 +314,7 @@ void UGraphicsSettingsWidgetBase::OnVSyncChanged(const int32 NewIndex)
 
 void UGraphicsSettingsWidgetBase::OnWindowModeChange(const int32 Index)
 {
+  UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("New window mode set to index: %d"), Index);
   GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(Index));
   GameUserSettings->ApplySettings(false);
 }
