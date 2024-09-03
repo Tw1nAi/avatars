@@ -88,6 +88,7 @@ class TranscriptionService:
             "Pracownia Prawa i Sprawiedliwość",
             "Teraz wracamy do naszego odcinka"
             "Teraz wracamy do naszego odcinka, w którym pokażę Wam",
+            "najnowszych filmików na świecie"
         ]
 
         """ Transcription state """
@@ -196,6 +197,7 @@ class TranscriptionService:
     def process_new_segments(self, new_segments, sample_duration):
         offset = None
         reached_repeat_threshold = False
+        filtered_all_segments = False
 
         filtered_segments = []
         for segment in new_segments:
@@ -206,7 +208,8 @@ class TranscriptionService:
                 if self.debug: info(f"Excluded phrase detected: {segment.text}")
 
         if len(filtered_segments) == 0:
-            return reached_repeat_threshold
+            filtered_all_segments = True
+            return reached_repeat_threshold, filtered_all_segments
 
         # process complete segments except for the last one
         if len(filtered_segments) > 1:
@@ -240,7 +243,7 @@ class TranscriptionService:
         if offset is not None:
             self.timestamp_offset += offset
 
-        return reached_repeat_threshold
+        return reached_repeat_threshold, filtered_all_segments
 
     def get_confirmed_transcript(self):
         return ''.join(self.transcript)
@@ -254,7 +257,7 @@ class TranscriptionService:
         """ This method will return either new segments or None. Mind that the speach_to_text method can also return None. if the VAD filter woul remove silence from the whole audio chunk. This means that the return value of this method needs to be always checked."""
 
         try:
-            result, _info = self.speach_to_text.transcribe(
+            return self.speach_to_text.transcribe(
                 audio_data,
                 language = self.language,
                 task = self.transcription_task,
@@ -262,7 +265,6 @@ class TranscriptionService:
                 vad_parameters = self.vad_parameters,
                 initial_prompt = self.last_unfinished
                 )
-            return result
 
         except Exception as e:
             error(f"Failed to transcribe audio chunk: {e}", exc_info=True)
@@ -320,7 +322,9 @@ class TranscriptionService:
                         input_sample = input_bytes.copy()
 
                         if self.debug and self.print_in_loop: info("[LOOP] started transcription")
-                        result = self.transcribe(input_sample)
+                        result, _info = self.transcribe(input_sample)
+
+                        if self.debug and self.print_in_loop: info(f'[LOOP] Sample duration: {_info.duration},time filtered by VAD: {_info.duration - _info.duration_after_vad}, time left avter VAD: {_info.duration_after_vad}')
 
                         if result is None:
                             if self.debug and self.print_in_loop: info("[LOOP] no result from transcription")
@@ -331,7 +335,12 @@ class TranscriptionService:
                             if self.debug and self.print_in_loop: info("[LOOP] processing result")
                             self.t_start = None
                             old_transcript = self.get_full_transcript()
-                            reached_repeat_threshold = self.process_new_segments(result, duration)
+                            reached_repeat_threshold, filtered_all_segments = self.process_new_segments(result, duration)
+
+                            if filtered_all_segments:
+                                if self.debug and self.print_in_loop: info("[LOOP] all segments were filtered")
+                                time.sleep(0.01)
+                                continue
 
                             new_transcript = self.get_full_transcript()
                             if old_transcript != new_transcript:
@@ -356,24 +365,29 @@ class TranscriptionService:
 
                         else:
                             if self.t_start is None:
+                                if self.debug and self.print_in_loop: info("[LOOP] Started timer for silence detection")
                                 self.t_start = time.time()
 
-                            # add a blank if there is no speech for n seconds
-                            if len(self.transcript) and self.transcript[-1] != '':
+                            has_speech = _info.duration_after_vad > 0
+                            if len(self.transcript) and self.transcript[-1] != '' or not has_speech:
                                 if time.time() - self.t_start > self.speach_silence_threshold:
                                     if self.debug and self.print_in_loop:
-                                        if self.debug and self.print_in_loop: info("[LOOP] Detected silence in audio input for {self.speach_silence_threshold} seconds")
+                                        info('[LOOP] Detected silence in audio input for {self.speach_silence_threshold} seconds. Adding a blank line to the transcript.')
                                     self.transcript.append('')
 
                                     events = self.get_events_by_category(TranscriptEvent.SILENCE_AFTER)
                                     if len(events):
-                                        if self.debug and self.print_in_loop: info("[EVENT]: silence after speach detected")
                                         text = self.get_full_transcript()
                                         reset_state = False
                                         for event in events:
                                             should_reset = event(text)
                                             if should_reset: reset_state = True
                                         if reset_state: self._reset_state()
+
+                                    time.sleep(0.01)
+                                    continue
+
+                            if self.debug and self.print_in_loop: error("[LOOP] [ERROR] Transcription loop failed with error: no result from transcription")
 
                 except Exception as e:
                     error(f" [LOOP]: Transcription failed with error: {e}", exc_info=True)
