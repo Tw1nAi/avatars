@@ -10,6 +10,6 @@ public class WidgetsToolkit : ModuleRules
 
     PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "UMG", "SlateCore" });
 
-    PrivateDependencyModuleNames.AddRange(new string[] { "UMGEditor", "Blutility" });
+    //PrivateDependencyModuleNames.AddRange(new string[] { "UMGEditor", "Blutility" });
   }
 }

@@ -1,3 +1,6 @@
+!!! skopiowałeś propozycję chata GPT i teraz trzeba to przetestować
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 import os
 import re as regex
 import threading
@@ -287,33 +290,23 @@ class TranscriptionService:
                     if self.clear_before_transcript_print: self.clear()
                     info(f'[TRANSCRIPT]: {current}')
 
-                # no point moving forward if we have no frames to process
                 if self.audio_frames_buffer is None:
-                    # if self.debug and self.print_in_loop: info("[LOOP] No frames to process")
                     time.sleep(0.01)
                     continue
 
                 num_of_samples_to_skip = int((self.timestamp_offset - self.frames_offset) * self.rate)
-                # Check if the current audio chunk exceeds duration of 25 seconds.
-                if self.audio_frames_buffer[num_of_samples_to_skip:].shape[0] > 25 * self.rate:
-                    # if self.debug and self.print_in_loop: info("[LOOP] Clipping audio chunk as it exceeds 30 seconds")
 
-                    # Calculate the total duration of the audio in the buffer in seconds.
-                    duration = self.audio_frames_buffer.shape[0] / self.rate
+                if num_of_samples_to_skip >= self.audio_frames_buffer.shape[0]:
+                    # All samples skipped, wait for more data
+                    time.sleep(0.01)
+                    continue
 
-                    # Update the timestamp offset to be 5 seconds less than the total duration of the audio.
-                    # This effectively "clips" the audio buffer to discard older audio data, keeping the most recent.
-                    self.timestamp_offset = self.frames_offset + duration - 5
-
-                # Select a single audio sample from the buffer to process.
-                # if self.debug and self.print_in_loop: info("[LOOP] Selecting a single audio sample", True)
                 samples_take = max(0, (self.timestamp_offset - self.frames_offset) * self.rate)
-                # get sliced audio samples that exceed the sample_take
                 input_bytes = self.audio_frames_buffer[int(samples_take):].copy()
                 duration = input_bytes.shape[0] / self.rate
 
                 if duration < self.min_sample_duration:
-                    if self.debug and self.print_in_loop: info("[LOOP] sample below min duration")
+                    self.timestamp_offset += self.min_sample_duration
                     time.sleep(0.01)
                     continue
 
@@ -324,10 +317,17 @@ class TranscriptionService:
                         if self.debug and self.print_in_loop: info("[LOOP] started transcription")
                         result, _info = self.transcribe(input_sample)
 
-                        if self.debug and self.print_in_loop: info(f'[LOOP] Sample duration: {_info.duration},time filtered by VAD: {_info.duration - _info.duration_after_vad}, time left avter VAD: {_info.duration_after_vad}')
+                        if self.debug and self.print_in_loop: info(f'[LOOP] Sample duration: {_info.duration}, time filtered by VAD: {_info.duration - _info.duration_after_vad}, time left after VAD: {_info.duration_after_vad}')
 
                         if result is None:
                             if self.debug and self.print_in_loop: info("[LOOP] no result from transcription")
+                            self.timestamp_offset += duration
+                            time.sleep(0.01)
+                            continue
+
+                        if _info.duration_after_vad == 0:
+                            if self.debug and self.print_in_loop: info("[LOOP] VAD filtered out all audio, skipping segment")
+                            self.timestamp_offset += duration
                             time.sleep(0.01)
                             continue
 
@@ -339,6 +339,7 @@ class TranscriptionService:
 
                             if filtered_all_segments:
                                 if self.debug and self.print_in_loop: info("[LOOP] all segments were filtered")
+                                self.timestamp_offset += duration
                                 time.sleep(0.01)
                                 continue
 
@@ -394,7 +395,8 @@ class TranscriptionService:
                     time.sleep(0.01)
 
         except Exception as e:
-             error(f"[LOOP]: The transcription loop failed with error {e}", exc_info=True)
+            error(f"[LOOP]: The transcription loop failed with error {e}", exc_info=True)
+
 
     def add_frames(self, new_frames):
         if self.audio_frames_buffer is not None:

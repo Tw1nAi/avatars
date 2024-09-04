@@ -39,6 +39,8 @@ Just run the `app/run.py` script in your local python environment, e.g.:
   python app/server.py
 ```
 
+and check the available arguments - also `app/run.py`
+
 # Server in docker
 
 Docker image is based on Nvidia's official image that supports CUDA.
@@ -67,20 +69,25 @@ docker rm -f custom-whisper && docker rmi custom-whisper
 ```
 
 To save image to local .tar file:
+
 ```
 docker save -o custom-whisper.tar custom-whisper
 ```
 
 and to load it on any system:
+
 ```
 docker load -i custom-whisper.tar
 ```
 
 You can compress the image file to save space and reduce transfer time:
+
 ```
 docker save custom-whisper | gzip >custom-whisper.tar.gz
 ```
+
 and load the compressed image:
+
 ```
 gunzip -c custom-whisper.tar.gz | docker load
 ```
