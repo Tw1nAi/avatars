@@ -6,6 +6,7 @@ public class AvatarsTarget : TargetRules
 {
   public AvatarsTarget(TargetInfo Target) : base(Target)
   {
+    bOverrideBuildEnvironment = true;
     Type = TargetType.Game;
     DefaultBuildSettings = BuildSettingsVersion.V2;
     IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;

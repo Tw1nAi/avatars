@@ -45,33 +45,6 @@ static int32 WindowModeToInt(EWindowMode::Type Mode)
 
 UGraphicsSettingsWidgetBase::UGraphicsSettingsWidgetBase()
 {
-  LabelMinWidth = 200.0f;
-
-  WindowModeLabels.Emplace(FText::FromString(TEXT("Fullscreen")));
-  WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed Fullscreen")));
-  WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed")));
-
-  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Low")));
-  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Medium")));
-  QualityOptionsLabels.Emplace(FText::FromString(TEXT("High")));
-  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Epic")));
-  QualityOptionsLabels.Emplace(FText::FromString(TEXT("Cinematic")));
-
-  UncappedFrameRateName = FText::FromString(TEXT("Uncapped"));
-  FrameRateOptions.Add(30);
-  FrameRateOptions.Add(45);
-  FrameRateOptions.Add(60);
-  FrameRateOptions.Add(90);
-  FrameRateOptions.Add(120);
-
-  BuildNamedTypes();
-
-  for (const FNamedSettingType& SettingName : DefaultNamesWithTypes)
-  {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Log, TEXT("Building default graphic settings for: %s"), *SettingName.Name);
-    FSettingDefinition DefaultSetting(SettingName.Name, SettingName.Type);
-    DefaultSettings.Emplace(DefaultSetting);
-  }
 }
 
 void UGraphicsSettingsWidgetBase::NativeConstruct()
@@ -88,6 +61,55 @@ void UGraphicsSettingsWidgetBase::NativePreConstruct()
   BuildNamedTypes();
   GenerateDefaultOptionsWidgets();
 #endif
+}
+
+void UGraphicsSettingsWidgetBase::CheckAndAddDefaultValues()
+{
+  if (LabelMinWidth == 0.0f)
+  {
+    LabelMinWidth = 200.0f;
+  }
+  if (WindowModeLabels.IsEmpty())
+  {
+    WindowModeLabels.Emplace(FText::FromString(TEXT("Fullscreen")));
+    WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed Fullscreen")));
+    WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed")));
+  }
+
+  if (QualityOptionsLabels.IsEmpty())
+  {
+    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Low")));
+    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Medium")));
+    QualityOptionsLabels.Emplace(FText::FromString(TEXT("High")));
+    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Epic")));
+    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Cinematic")));
+  }
+
+  if (UncappedFrameRateName.IsEmpty())
+  {
+    UncappedFrameRateName = FText::FromString(TEXT("Uncapped"));
+  }
+
+  if (FrameRateOptions.IsEmpty())
+  {
+    FrameRateOptions.Add(30);
+    FrameRateOptions.Add(45);
+    FrameRateOptions.Add(60);
+    FrameRateOptions.Add(90);
+    FrameRateOptions.Add(120);
+  }
+
+  BuildNamedTypes();
+
+  if (DefaultSettings.IsEmpty())
+  {
+    for (const FNamedSettingType& SettingName : DefaultNamesWithTypes)
+    {
+      UE_LOG(LogGraphicsSettingsWidgetBase, Log, TEXT("Building default graphic settings for: %s"), *SettingName.Name);
+      FSettingDefinition DefaultSetting(SettingName.Name, SettingName.Type);
+      DefaultSettings.Emplace(DefaultSetting);
+    }
+  }
 }
 
 void UGraphicsSettingsWidgetBase::BuildNamedTypes()
@@ -130,6 +152,21 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     OptionsContainer = NewObject<UPanelWidget>(this, OptionsContainerClass);
   }
   OptionsContainer->ClearChildren();
+
+  CheckAndAddDefaultValues();
+
+  // these should always have the same length
+  if (DefaultSettings.Num() != DefaultNamesWithTypes.Num())
+  {
+    UE_LOG(
+        LogGraphicsSettingsWidgetBase,
+        Error,
+        TEXT("DefaultSettings and DefaultNamesWithTypes don't have equal length. DefaultSettings length: %d, DefaultNamesWithTypes: %d"),
+        DefaultSettings.Num(),
+        DefaultNamesWithTypes.Num()
+    );
+    return;
+  }
 
   for (int32 i = 0; i < DefaultSettings.Num(); i++)
   {

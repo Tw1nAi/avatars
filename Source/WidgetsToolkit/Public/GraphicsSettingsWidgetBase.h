@@ -204,5 +204,6 @@ protected:
     DefaultNamesWithTypes.Emplace(FNamedSettingType(Name, Type, Getter, Setter));
   }
 
+  void CheckAndAddDefaultValues();
   void BuildNamedTypes();
 };
