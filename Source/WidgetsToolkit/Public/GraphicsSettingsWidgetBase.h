@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Components/Button.h"
-#include "Components/VerticalBox.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "CoreMinimal.h"
 
 #include "SelectionWidgetBase.h"
@@ -119,7 +119,6 @@ protected:
   void SetSettingsState(const bool bSettingsApplied);
 
 public:
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TSubclassOf<UPanelWidget> OptionsContainerClass = UVerticalBox::StaticClass();
 
@@ -129,6 +128,9 @@ public:
   /* Default settings are provided with the engine. Here you can change the text labels that can be localised. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
   TArray<FSettingDefinition> DefaultSettings;
+
+  /* Explicit list of settings that can be changed with Overall Quality setting. */
+  TArray<FSettingDefinition> QualitySettings;
 
 protected:
   void InitWindowMode();
@@ -179,6 +181,8 @@ public:
   bool bResetWidgetTypes = false;
 
 protected:
+  void InitGenericSettings();
+
   template <typename T> T* CreateSettingWidget()
   {
     UWidget* SettingWidget = NewObject<USelectionWidgetBase>(this, SelectionWidgetBaseClass);
@@ -210,6 +214,14 @@ protected:
   /* This should automatically be filled with resolutions available for main screen. */
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   TArray<FIntPoint> Resolutions;
+
+  void InitOverallQuality();
+  UFUNCTION()
+  void OnOverallQualityChanged(const int32 NewIndex);
+
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
+  FText CustomQualityLabel;
 
   void InitVSync();
   UFUNCTION()

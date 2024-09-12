@@ -7,7 +7,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-//#include "Framerate.h"
+// #include "Framerate.h"
 
 DEFINE_LOG_CATEGORY(LogGraphicsSettingsWidgetBase);
 
@@ -18,12 +18,18 @@ namespace
   static const FString WindowModeName(TEXT("Window Mode"));
   static const FString ResolutionName(TEXT("Resolution"));
   static const FString VSyncName(TEXT("VSync"));
+  static const FString OverallQualityName(TEXT("Overall Quality"));
   static const FString FrameRateName(TEXT("Frame Rate"));
   static const FString ShadingName(TEXT("Shading Quality"));
   static const FString GlobalIlluminationName(TEXT("Global Illumination Quality"));
-  static const FString PostProcessName(TEXT("PostProcess Quality"));
   static const FString VisualEffectsName(TEXT("Visual Effects Quality"));
   static const FString ShadowsName(TEXT("Shadows Quality"));
+  static const FString ViewDistanceName(TEXT("View Distance Quality"));
+  static const FString ReflectionName(TEXT("Reflection Quality"));
+  static const FString AntiAliasingName(TEXT("AntiAliasing Quality"));
+  static const FString TexturesName(TEXT("Textures Quality"));
+  static const FString FoliageName(TEXT("Foliage Quality"));
+  static const FString PostProcessingName(TEXT("Post Processing Quality"));
 
 static int32 WindowModeToInt(EWindowMode::Type Mode)
 {
@@ -44,22 +50,25 @@ static int32 WindowModeToInt(EWindowMode::Type Mode)
 
 UGraphicsSettingsWidgetBase::UGraphicsSettingsWidgetBase()
 {
+  CheckAndAddDefaultValues();
 }
 
 void UGraphicsSettingsWidgetBase::NativeConstruct()
 {
   GameUserSettings = UGameUserSettings::GetGameUserSettings();
+  CheckAndAddDefaultValues();
   GenerateDefaultOptionsWidgets();
   InitAllSettings();
+  SetSettingsState(true);
 }
 
 void UGraphicsSettingsWidgetBase::NativePreConstruct()
 {
 // Call this to visualise widgets in the editor
 #if WITH_EDITOR
-  BuildNamedTypes();
+  CheckAndAddDefaultValues();
   GenerateDefaultOptionsWidgets();
-  SetSettingsState(false);
+  SetSettingsState(true);
 #endif
 }
 
@@ -69,25 +78,31 @@ void UGraphicsSettingsWidgetBase::CheckAndAddDefaultValues()
   {
     LabelMinWidth = 200.0f;
   }
+
   if (WindowModeLabels.IsEmpty())
   {
-    WindowModeLabels.Emplace(FText::FromString(TEXT("Fullscreen")));
-    WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed Fullscreen")));
-    WindowModeLabels.Emplace(FText::FromString(TEXT("Windowed")));
+    WindowModeLabels.Add(FText::FromString(TEXT("Fullscreen")));
+    WindowModeLabels.Add(FText::FromString(TEXT("Windowed Fullscreen")));
+    WindowModeLabels.Add(FText::FromString(TEXT("Windowed")));
   }
 
   if (QualityOptionsLabels.IsEmpty())
   {
-    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Low")));
-    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Medium")));
-    QualityOptionsLabels.Emplace(FText::FromString(TEXT("High")));
-    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Epic")));
-    QualityOptionsLabels.Emplace(FText::FromString(TEXT("Cinematic")));
+    QualityOptionsLabels.Add(FText::FromString(TEXT("Low")));
+    QualityOptionsLabels.Add(FText::FromString(TEXT("Medium")));
+    QualityOptionsLabels.Add(FText::FromString(TEXT("High")));
+    QualityOptionsLabels.Add(FText::FromString(TEXT("Epic")));
+    QualityOptionsLabels.Add(FText::FromString(TEXT("Cinematic")));
   }
 
   if (UncappedFrameRateName.IsEmpty())
   {
     UncappedFrameRateName = FText::FromString(TEXT("Uncapped"));
+  }
+
+  if (CustomQualityLabel.IsEmpty())
+  {
+    CustomQualityLabel = FText::FromString(TEXT("Custom"));
   }
 
   if (FrameRateOptions.IsEmpty())
@@ -101,13 +116,37 @@ void UGraphicsSettingsWidgetBase::CheckAndAddDefaultValues()
 
   BuildNamedTypes();
 
-  if (DefaultSettings.IsEmpty())
+  // see if we can add missing named settings
+  for (int32 i = 0; i < DefaultNamesWithTypes.Num(); i++)
   {
-    for (const FNamedSettingType& SettingName : DefaultNamesWithTypes)
+    const FNamedSettingType& NameWithType = DefaultNamesWithTypes[i];
+    // check if the named settings exists
+    const int32 Index = DefaultSettings.IndexOfByPredicate([NameWithType](const FSettingDefinition& Setting) { return Setting.DefaultSettingName == NameWithType.Name; });
+
+    // if not add it at the index
+    if (Index == INDEX_NONE || Index < 0)
     {
-      UE_LOG(LogGraphicsSettingsWidgetBase, Log, TEXT("Building default graphic settings for: %s"), *SettingName.Name);
-      FSettingDefinition DefaultSetting(SettingName.Name, SettingName.Type);
-      DefaultSettings.Emplace(DefaultSetting);
+      FSettingDefinition DefaultSetting(NameWithType.Name, NameWithType.Type);
+      DefaultSettings.Insert(DefaultSetting, i);
+    }
+  }
+
+  // Make sanity check and loop over newly added settings if all are avilable in DefaultNamesWithTypes
+  for (int32 i = 0; i < DefaultSettings.Num(); i++)
+  {
+    const FSettingDefinition& Setting = DefaultSettings[i];
+    const int32 Index = DefaultNamesWithTypes.IndexOfByPredicate([Setting](const FNamedSettingType& NameWithType) { return NameWithType.Name == Setting.DefaultSettingName; });
+
+    if (Index == INDEX_NONE || Index < 0)
+    {
+      UE_LOG(
+          LogGraphicsSettingsWidgetBase,
+          Warning,
+          TEXT("Setting %s is not available in DefaultNamesWithTypes. Check if the setting is added to DefaultNamesWithTypes"),
+          *Setting.DefaultSettingName
+      );
+      // remove this setting from this index
+      DefaultSettings.RemoveAt(i);
     }
   }
 }
@@ -117,13 +156,22 @@ void UGraphicsSettingsWidgetBase::BuildNamedTypes()
   DefaultNamesWithTypes.Reset();
   AddNameWithType(WindowModeName, ESettingType::WindowMode);
   AddNameWithType(ResolutionName, ESettingType::Custom);
-  AddNameWithType(VSyncName, ESettingType::OnOff);
   AddNameWithType(FrameRateName, ESettingType::Custom);
+  AddNameWithType(VSyncName, ESettingType::OnOff);
+
+  // quality settings
+  AddNameWithType(OverallQualityName, ESettingType::Custom);
+
   AddNameWithType(ShadingName, ESettingType::Quality, &UGameUserSettings::GetShadingQuality, &UGameUserSettings::SetShadingQuality);
   AddNameWithType(GlobalIlluminationName, ESettingType::Quality, &UGameUserSettings::GetGlobalIlluminationQuality, &UGameUserSettings::SetGlobalIlluminationQuality);
-  AddNameWithType(PostProcessName, ESettingType::Quality, &UGameUserSettings::GetPostProcessingQuality, &UGameUserSettings::SetPostProcessingQuality);
   AddNameWithType(VisualEffectsName, ESettingType::Quality, &UGameUserSettings::GetVisualEffectQuality, &UGameUserSettings::SetVisualEffectQuality);
   AddNameWithType(ShadowsName, ESettingType::Quality, &UGameUserSettings::GetShadowQuality, &UGameUserSettings::SetShadowQuality);
+  AddNameWithType(ViewDistanceName, ESettingType::Quality, &UGameUserSettings::GetViewDistanceQuality, &UGameUserSettings::SetViewDistanceQuality);
+  AddNameWithType(ReflectionName, ESettingType::Quality, &UGameUserSettings::GetReflectionQuality, &UGameUserSettings::SetReflectionQuality);
+  AddNameWithType(AntiAliasingName, ESettingType::Quality, &UGameUserSettings::GetAntiAliasingQuality, &UGameUserSettings::SetAntiAliasingQuality);
+  AddNameWithType(TexturesName, ESettingType::Quality, &UGameUserSettings::GetTextureQuality, &UGameUserSettings::SetTextureQuality);
+  AddNameWithType(FoliageName, ESettingType::Quality, &UGameUserSettings::GetFoliageQuality, &UGameUserSettings::SetFoliageQuality);
+  AddNameWithType(PostProcessingName, ESettingType::Quality, &UGameUserSettings::GetPostProcessingQuality, &UGameUserSettings::SetPostProcessingQuality);
 }
 
 void UGraphicsSettingsWidgetBase::ResetDefaultSettings()
@@ -139,6 +187,26 @@ void UGraphicsSettingsWidgetBase::ResetDefaultSettings()
   }
 }
 
+void UGraphicsSettingsWidgetBase::InitGenericSettings()
+{
+  for (const FSettingDefinition& Setting : DefaultSettings)
+  {
+    if (Setting.SettingType != ESettingType::Quality) continue;
+
+    if (USelectionWidgetBase* SelectionWidget = Cast<USelectionWidgetBase>(Setting.WidgetInstance))
+    {
+      SelectionWidget->OptionName = Setting.DefaultSettingName;
+      SelectionWidget->OnSelectionChanged.BindLambda([&](int32 Index) {
+        std::invoke(Setting.Setter, GameUserSettings, Index);
+        SetSettingsState(false);
+      });
+
+      const int32 CurrentIndex = std::invoke(Setting.Getter, GameUserSettings);
+      SelectionWidget->SetCurrentSelection(CurrentIndex);
+    }
+  }
+}
+
 void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
 {
   if (!SelectionWidgetBaseClass)
@@ -147,13 +215,7 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     return;
   }
 
-  if (!OptionsContainer)
-  {
-    OptionsContainer = NewObject<UPanelWidget>(this, OptionsContainerClass);
-  }
   OptionsContainer->ClearChildren();
-
-  CheckAndAddDefaultValues();
 
   // these should always have the same length
   if (DefaultSettings.Num() != DefaultNamesWithTypes.Num())
@@ -193,6 +255,9 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       continue;
     }
+
+    SelectionWidget->SetOptionName(Setting.DefaultSettingName);
+    Setting.WidgetInstance = SelectionWidget;
 
     UHorizontalBox* HorizontalBox = NewObject<UHorizontalBox>(this);
     UTextBlock* Label = NewObject<UTextBlock>(this);
@@ -238,10 +303,15 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
       {
         SelectionWidget->AddOption(FSelectionOption(OptionText));
       }
+    case ESettingType::Custom:
+      break;
+    default:
+      UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("Unsupported setting type"));
+      checkNoEntry();
       break;
     }
 
-    SelectionWidget->SetCurrentSelection(0);
+    //SelectionWidget->SetCurrentSelection(0);
 
     if (OptionsContainer && OptionsContainer->IsA<UPanelWidget>())
     {
@@ -251,8 +321,6 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     {
       UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("OptionsContainer is not a UPanelWidget"));
     }
-
-    Setting.WidgetInstance = SelectionWidget;
   }
 }
 
@@ -264,10 +332,13 @@ void UGraphicsSettingsWidgetBase::OnApplyButtonClicked()
 
 void UGraphicsSettingsWidgetBase::SetSettingsState(const bool bSettingsApplied)
 {
-  ApplyButton->SetIsEnabled(!bSettingsApplied);
-  SettingsStateMessage->SetIsEnabled(!bSettingsApplied);
+  if (ApplyButton) ApplyButton->SetIsEnabled(!bSettingsApplied);
 
-  SettingsStateMessage->SetText(bSettingsApplied ? NoChangedSettingsMessage: ThereAreChangedSettingsMessage);
+  if (SettingsStateMessage)
+  {
+    SettingsStateMessage->SetIsEnabled(!bSettingsApplied);
+    SettingsStateMessage->SetText(bSettingsApplied ? NoChangedSettingsMessage : ThereAreChangedSettingsMessage);
+  }
 }
 
 void UGraphicsSettingsWidgetBase::InitAllSettings()
@@ -276,38 +347,11 @@ void UGraphicsSettingsWidgetBase::InitAllSettings()
   InitResolution();
   InitVSync();
   InitFrameRate();
-
-  for (const FSettingDefinition& Setting : DefaultSettings)
-  {
-    UWidget* SettingWidget = Setting.WidgetInstance;
-
-    if (!SettingWidget)
-    {
-      FString Message = FString::Printf(TEXT("Widget instance not created for setting %s"), *Setting.DefaultSettingName);
-      UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
-      continue;
-    }
-
-    if (USelectionWidgetBase* SelectionWidget = Cast<USelectionWidgetBase>(SettingWidget))
-    {
-      if (Setting.Getter && Setting.Setter)
-      {
-        SelectionWidget->OptionName = Setting.DefaultSettingName;
-        SelectionWidget->OnSelectionChanged.BindLambda([this, Setter = Setting.Setter](int32 Index) {
-          std::invoke(Setter, GameUserSettings, Index);
-          SetSettingsState(false);
-        });
-
-        const int32 CurrentIndex = std::invoke(Setting.Getter, GameUserSettings);
-        SelectionWidget->SetCurrentSelection(CurrentIndex);
-      }
-    }
-  }
+  InitOverallQuality();
+  InitGenericSettings();
 
   ApplyButton->OnClicked.Clear();
   ApplyButton->OnClicked.AddDynamic(this, &UGraphicsSettingsWidgetBase::OnApplyButtonClicked);
-  SetSettingsState(true);
 }
 
 void UGraphicsSettingsWidgetBase::InitResolution()
@@ -345,7 +389,9 @@ void UGraphicsSettingsWidgetBase::InitResolution()
   }
   else
   {
-    UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("Could not find current resolution in system provided resolutions. Current resolution: %s."), *CurrentResolution.ToString());
+    UE_LOG(
+        LogGraphicsSettingsWidgetBase, Warning, TEXT("Could not find current resolution in system provided resolutions. Current resolution: %s."), *CurrentResolution.ToString()
+    );
 
     // set full screen and the current screen resolution
     const FIntPoint ScreenResolution = GameUserSettings->GetDesktopResolution();
@@ -373,6 +419,69 @@ void UGraphicsSettingsWidgetBase::OnResolutionChanged(const int32 NewIndex)
 {
   const FIntPoint Resolution = Resolutions[NewIndex];
   GameUserSettings->SetScreenResolution(Resolution);
+  SetSettingsState(false);
+}
+
+void UGraphicsSettingsWidgetBase::InitOverallQuality()
+{
+  USelectionWidgetBase* OverallQualityWidget = GetSettingWidget(OverallQualityName);
+  if (!OverallQualityWidget)
+  {
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("OverallQualityWidget is not set"));
+    return;
+  }
+
+  OverallQualityWidget->OptionName = OverallQualityName;
+  OverallQualityWidget->Clear();
+
+  for (const FText& QualityOption : QualityOptionsLabels)
+  {
+    FSelectionOption Option;
+    Option.Label = QualityOption;
+    OverallQualityWidget->AddOption(Option);
+  }
+  // last index should be the custom quality option
+  FSelectionOption Option;
+  Option.Label = CustomQualityLabel;
+  OverallQualityWidget->AddOption(Option);
+
+  const int32 CurrentQuality = GameUserSettings->GetOverallScalabilityLevel();
+  OverallQualityWidget->SetCurrentSelection(CurrentQuality);
+  OnOverallQualityChanged(CurrentQuality);
+
+  OverallQualityWidget->OnSelectionChanged.BindUObject(this, &UGraphicsSettingsWidgetBase::OnOverallQualityChanged);
+}
+
+void UGraphicsSettingsWidgetBase::OnOverallQualityChanged(const int32 NewIndex)
+{
+  const bool bIsCustomQuality = NewIndex == QualityOptionsLabels.Num() || NewIndex == -1;
+  if (bIsCustomQuality)
+  {
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("Received custom quality index of overall quality setting of value: %d"), NewIndex);
+  }
+
+  UE_LOG(LogGraphicsSettingsWidgetBase, Log, TEXT("Overall quality changed to %d index."), NewIndex);
+  for (const FSettingDefinition& Setting : DefaultSettings)
+  {
+    if (Setting.SettingType != ESettingType::Quality || !Setting.WidgetInstance)
+    {
+      continue;
+    }
+
+    Setting.WidgetInstance->SetIsEnabled(bIsCustomQuality);
+
+    if (!bIsCustomQuality)
+    {
+      Setting.WidgetInstance->SetCurrentSelection(NewIndex);
+      if (Setting.Setter != nullptr)
+      {
+        std::invoke(Setting.Setter, GameUserSettings, NewIndex);
+      }
+    }
+  }
+
+  GameUserSettings->SetOverallScalabilityLevel(NewIndex);
+  //GameUserSettings->SetOverallScalabilityLevel(bIsCustomQuality ? -1 : NewIndex);
   SetSettingsState(false);
 }
 

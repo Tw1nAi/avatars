@@ -50,7 +50,7 @@ void USelectionWidgetBase::SetCurrentSelection(const int32 Index)
 {
   if (Index < 0 || Index >= Options.Num())
   {
-    FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), Index, *OptionName);
+    const FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), Index, *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
@@ -94,30 +94,50 @@ UWidget* USelectionWidgetBase::OnNavigation(EUINavigation InNavigation)
   return this;
 }
 
+bool USelectionWidgetBase::CheckLabelWidget()
+{
+  if (LabelWidget == nullptr)
+  {
+    const FString Message = FString::Printf(TEXT("No label widget provided for the selection widget: %s"), *OptionName);
+    UE_LOG(LogButtonSelectionWidget, Warning, TEXT("%s"), *Message);
+    //FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Warning);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    //verify(false);
+    return false;
+  }
+
+  return true;
+}
+
 void USelectionWidgetBase::UpdateSelectionText()
 {
-  // FString Message =
-  //     FString::Printf(TEXT("Updating selection widget: %s, new option: %s, index: %d"), *OptionName, *Options[SelectedOptionIndex].Label.ToString(), SelectedOptionIndex);
-  // UE_LOG(LogButtonSelectionWidget, Log, TEXT("%s"), *Message);
-  // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Message);
-
-  if (!LabelWidget)
-  {
-    FString Message = FString::Printf(TEXT("No label widget provided for the selection widget: %s"), *OptionName);
-    UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
-    return;
-  }
-
   if (!Options.IsValidIndex(SelectedOptionIndex))
   {
-    FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), SelectedOptionIndex, *OptionName);
+    const FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), SelectedOptionIndex, *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
 
-  LabelWidget->SetText(Options[SelectedOptionIndex].Label);
+  const FSelectionOption& SelectedOption = Options[SelectedOptionIndex];
+  const FText& Label = SelectedOption.Label;
+  if (Label.IsEmpty())
+  {
+    const FString Message = FString::Printf(TEXT("Null label provided for the selection widget: %s"), *OptionName);
+    UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    return;
+  }
+
+  if (LabelWidget)
+  {
+    LabelWidget->SetText(Label);
+
+    const FString Message = FString::Printf(TEXT("Updating selection widget: %s, new option: %s, index: %d"), *OptionName, *Label.ToString(), SelectedOptionIndex);
+    UE_LOG(LogButtonSelectionWidget, Log, TEXT("%s"), *Message);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Message);
+  }
+  
 }
 
 void USelectionWidgetBase::SelectPrevious()

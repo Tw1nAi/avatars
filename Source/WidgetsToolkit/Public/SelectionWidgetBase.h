@@ -30,6 +30,8 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString OptionName;
+  UFUNCTION(BlueprintCallable)
+  void SetOptionName(FString NewName) { OptionName = NewName; }
 
   UFUNCTION(BlueprintCallable)
   void SelectPrevious();
@@ -59,7 +61,8 @@ protected:
   TArray<FSelectionOption> Options;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget), Category = "Selection Widget Base")
-  TObjectPtr<UTextBlock> LabelWidget;
+  UTextBlock* LabelWidget;
+  bool CheckLabelWidget();
 
   int SelectedOptionIndex = 0;
 };

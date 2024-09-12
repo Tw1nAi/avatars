@@ -28,17 +28,15 @@ void UOptionsMenu::BuildPanels()
     FPanelSettings& OptionsPanel = OptionsPanels[Index];
     if (!OptionsPanel.PanelWidgetClass)
     {
-      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: PanelWidgetClass is not set"));
-      return;
+      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: PanelWidgetClass is not set, %s"), *OptionsPanel.CategoryName.ToString());
+      continue;
     }
     UWidgetBase* Panel = CreateWidget<UWidgetBase>(this, OptionsPanel.PanelWidgetClass);
     if (Index == 0) FirstPanel = Panel;
     if (Panel == nullptr)
     {
-      UE_LOG(
-          LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.PanelWidgetClass->GetName()
-      );
-      return;
+      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.PanelWidgetClass->GetName());
+      continue;
     }
 
     Panel->SetInteractive(true);
@@ -51,15 +49,13 @@ void UOptionsMenu::BuildPanels()
     if (!OptionsPanel.ButtonWidgetClass)
     {
       UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: ButtonWidgetClass is not set"));
-      return;
+      continue;
     }
     UButtonBaseWidget* Button = CreateWidget<UButtonBaseWidget>(this, OptionsPanel.ButtonWidgetClass);
     if (Button == nullptr)
     {
-      UE_LOG(
-          LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.ButtonWidgetClass->GetName()
-      );
-      return;
+      UE_LOG(LogTemp, Error, TEXT("UOptionsMenu::BuildPanels: Failed to create widget of class %s"), *OptionsPanel.ButtonWidgetClass->GetName());
+      continue;
     }
 
     if (Index != 0)
@@ -78,8 +74,6 @@ void UOptionsMenu::BuildPanels()
     Button->Button->OnClicked.AddDynamic(Panel, &UWidgetBase::ShowDelayed);
     Button->Show();
     MenuContainer->AddChild(Button);
-
-    // log MenuContainer children count
   }
   if (FirstPanel)
   {
