@@ -59,7 +59,6 @@ void UGraphicsSettingsWidgetBase::NativePreConstruct()
 #if WITH_EDITOR
   BuildNamedTypes();
   GenerateDefaultOptionsWidgets();
-  SetSettingsState(false);
 #endif
 }
 
@@ -259,15 +258,6 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
 void UGraphicsSettingsWidgetBase::OnApplyButtonClicked()
 {
   GameUserSettings->ApplySettings(false);
-  SetSettingsState(true);
-}
-
-void UGraphicsSettingsWidgetBase::SetSettingsState(const bool bSettingsApplied)
-{
-  ApplyButton->SetIsEnabled(!bSettingsApplied);
-  SettingsStateMessage->SetIsEnabled(!bSettingsApplied);
-
-  SettingsStateMessage->SetText(bSettingsApplied ? NoChangedSettingsMessage: ThereAreChangedSettingsMessage);
 }
 
 void UGraphicsSettingsWidgetBase::InitAllSettings()
@@ -296,7 +286,7 @@ void UGraphicsSettingsWidgetBase::InitAllSettings()
         SelectionWidget->OptionName = Setting.DefaultSettingName;
         SelectionWidget->OnSelectionChanged.BindLambda([this, Setter = Setting.Setter](int32 Index) {
           std::invoke(Setter, GameUserSettings, Index);
-          SetSettingsState(false);
+          GameUserSettings->ApplySettings(false);
         });
 
         const int32 CurrentIndex = std::invoke(Setting.Getter, GameUserSettings);
@@ -307,7 +297,6 @@ void UGraphicsSettingsWidgetBase::InitAllSettings()
 
   ApplyButton->OnClicked.Clear();
   ApplyButton->OnClicked.AddDynamic(this, &UGraphicsSettingsWidgetBase::OnApplyButtonClicked);
-  SetSettingsState(true);
 }
 
 void UGraphicsSettingsWidgetBase::InitResolution()
@@ -373,7 +362,7 @@ void UGraphicsSettingsWidgetBase::OnResolutionChanged(const int32 NewIndex)
 {
   const FIntPoint Resolution = Resolutions[NewIndex];
   GameUserSettings->SetScreenResolution(Resolution);
-  SetSettingsState(false);
+  //GameUserSettings->ApplySettings(false);
 }
 
 void UGraphicsSettingsWidgetBase::InitVSync()
@@ -392,13 +381,13 @@ void UGraphicsSettingsWidgetBase::InitVSync()
 void UGraphicsSettingsWidgetBase::OnVSyncChanged(const int32 NewIndex)
 {
   GameUserSettings->SetVSyncEnabled(NewIndex == 0 ? false : true);
-  SetSettingsState(false);
+  //GameUserSettings->ApplySettings(false);
 }
 
 void UGraphicsSettingsWidgetBase::OnWindowModeChange(const int32 Index)
 {
   GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(Index));
-  SetSettingsState(false);
+  //GameUserSettings->ApplySettings(false);
 }
 
 void UGraphicsSettingsWidgetBase::InitWindowMode()
@@ -480,6 +469,6 @@ void UGraphicsSettingsWidgetBase::InitFrameRate()
   FrameRateWidget->OnSelectionChanged.BindLambda([this](const int32 Index) {
     const int32 FrameRate = FrameRateOptions[Index];
     GameUserSettings->SetFrameRateLimit(FrameRate);
-    SetSettingsState(false);
+    //GameUserSettings->ApplySettings(false);
   });
 }

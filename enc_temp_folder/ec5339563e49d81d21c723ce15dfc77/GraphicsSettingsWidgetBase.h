@@ -4,7 +4,6 @@
 
 #include "Components/Button.h"
 #include "Components/VerticalBox.h"
-#include "Components/TextBlock.h"
 #include "CoreMinimal.h"
 
 #include "SelectionWidgetBase.h"
@@ -104,19 +103,9 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Graphics Settings", meta = (BindWidget))
   UButton* ApplyButton;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Graphics Settings", meta = (BindWidget))
-  UTextBlock* SettingsStateMessage;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  FText NoChangedSettingsMessage;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Graphics Settings")
-  FText ThereAreChangedSettingsMessage;
-
 protected:
   UFUNCTION()
   void OnApplyButtonClicked();
-  void SetSettingsState(const bool bSettingsApplied);
 
 public:
 
