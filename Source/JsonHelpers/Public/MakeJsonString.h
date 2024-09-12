@@ -16,10 +16,6 @@
 
 */
 
-// Include necessary headers
-#include "Json.h"
-#include "Serialization/JsonSerializer.h"
-
 class MakeJsonString
 {
 public:
@@ -29,8 +25,7 @@ public:
     AddField(JsonObject, args...);
 
     // Directly create a clean, condensed JSON string
-    TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> Writer =
-        TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
+    TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> Writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&OutputString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
   }
 
@@ -50,25 +45,13 @@ private:
   }
 
   // Overloads for different types
-  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const char* Value)
-  {
-    JsonObject->SetStringField(Key, FString(UTF8_TO_TCHAR(Value)));
-  }
+  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const char* Value) { JsonObject->SetStringField(Key, FString(UTF8_TO_TCHAR(Value))); }
 
-  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const FString& Value)
-  {
-    JsonObject->SetStringField(Key, Value);
-  }
+  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const FString& Value) { JsonObject->SetStringField(Key, Value); }
 
-  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, double Value)
-  {
-    JsonObject->SetNumberField(Key, Value);
-  }
+  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, double Value) { JsonObject->SetNumberField(Key, Value); }
 
-  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, int32 Value)
-  {
-    JsonObject->SetNumberField(Key, static_cast<double>(Value));
-  }
+  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, int32 Value) { JsonObject->SetNumberField(Key, static_cast<double>(Value)); }
 
   static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, bool Value) { JsonObject->SetBoolField(Key, Value); }
 
@@ -102,8 +85,5 @@ private:
     JsonObject->SetArrayField(Key, JsonArray);
   }
 
-  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const TSharedPtr<FJsonObject>& Value)
-  {
-    JsonObject->SetObjectField(Key, Value);
-  }
+  static void AddFieldByType(TSharedPtr<FJsonObject>& JsonObject, const FString& Key, const TSharedPtr<FJsonObject>& Value) { JsonObject->SetObjectField(Key, Value); }
 };

@@ -1,4 +1,4 @@
-
+﻿
 // Copyright Juice sp. z o. o., All Rights Reserved.
 
 #include "AvatarsPlayerController.h"
@@ -15,6 +15,7 @@
 #include "Get.h"
 #include "Log.h"
 #include "MakeJsonString.h"
+#include "MovieSceneSequenceID.h"
 #include "Persistance/PersistanceController.h"
 #include "RestApi.h"
 #include "TextHelpers.h"
@@ -24,9 +25,35 @@ DEFINE_LOG_CATEGORY(LogAwatarsPlayerController);
 
 AAvatarsPlayerController::AAvatarsPlayerController()
 {
-  ExcludedPhrases.Add(TEXT("KONIEC!"));
   IdleGreetingTimeout.TimeoutDelay = 30.0f;
-  bApiDone = true;
+
+
+  // add the default excluded phrases
+  ExcludedPhrases.Add(TEXT("KONIEC!"));
+  ExcludedPhrases.Add(TEXT("KONIEC"));
+  ExcludedPhrases.Add(TEXT("PARROT"));
+  ExcludedPhrases.Add(TEXT("PARROT TV"));
+  ExcludedPhrases.Add(TEXT("support on Patronite"));
+  ExcludedPhrases.Add(TEXT("Thank you for your support on Patronite"));
+  ExcludedPhrases.Add(TEXT("Zapraszam na kolejny odcinek"));
+  ExcludedPhrases.Add(TEXT("Amara.org"));
+  ExcludedPhrases.Add(TEXT("Dzięki za uwagę"));
+  ExcludedPhrases.Add(TEXT("Dzięki za obejrzenie"));
+  ExcludedPhrases.Add(TEXT("Świerczek-Gryboś"));
+  ExcludedPhrases.Add(TEXT("Transkrypcja Magdalena Świerczek-Gryboś"));
+  ExcludedPhrases.Add(TEXT("PTA – TVP"));
+  ExcludedPhrases.Add(TEXT("do zobaczenia w kolejnym odcinku"));
+  ExcludedPhrases.Add(TEXT("Polskie Towarzystwo Astronomiczne"));
+  ExcludedPhrases.Add(TEXT("Towarzystwo Astronomiczne"));
+  ExcludedPhrases.Add(TEXT("Telewizja Polska"));
+  ExcludedPhrases.Add(TEXT("nie zapomnijcie zasubskrybować"));
+  ExcludedPhrases.Add(TEXT("zafollowować"));
+  ExcludedPhrases.Add(TEXT("zafollowować mnie na Facebooku"));
+  ExcludedPhrases.Add(TEXT("Zdjęcia i montaż"));
+  ExcludedPhrases.Add(TEXT("Pracownia Prawa i Sprawiedliwość"));
+  ExcludedPhrases.Add(TEXT("Teraz wracamy do naszego odcinka"));
+  ExcludedPhrases.Add(TEXT("wracamy do naszego odcinka"));
+  ExcludedPhrases.Add(TEXT("najnowszych filmików na świecie"));
 }
 
 AAvatarsPlayerController* AAvatarsPlayerController::Get(UWorld* World)
@@ -211,6 +238,17 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
     {
       GEngine->AddOnScreenDebugMessage(-1, 30.f, FColor::Green, Message);
     }
+
+    if (WeakController->IsExcludedPhrase(Message))
+      {
+        if (WeakController->bDebug)
+        {
+          FString DebugMessage = "Detected excluded phrase in user message: " + Message;
+          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Orange, DebugMessage);
+          UE_LOG(LogAwatarsPlayerController, Warning, TEXT("%s"), *DebugMessage);
+        }
+        return;
+      }
 
     if (!WeakController->bSendOnlyOnFinal || Message.Contains("[FINAL]"))
     {
@@ -737,6 +775,12 @@ void AAvatarsPlayerController::OnAvatarStateChanged(EAvatarState OldState, EAvat
 
   if (RootWidget == nullptr) return;
 
+  if (NewState == EAvatarState::Idle && Suggestions.Num() > 0)
+  {
+    RootWidget->SetSuggestionsText(Suggestions);
+    RootWidget->ShowSuggestionsText();
+  }
+
   RootWidget->SetStateMessage(NewState);
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
@@ -776,11 +820,13 @@ AAvatarPawn* AAvatarsPlayerController::GetDefaultAvatar() const
   return SpawnedAvatars[0];
 }
 
-bool AAvatarsPlayerController::IsExcludedPhrase(const FString Phrase)
+bool AAvatarsPlayerController::IsExcludedPhrase(const FString& Phrase) const
 {
+  const FString CleanPhrase = Phrase.ToLower().TrimStartAndEnd();
   for (const FString& String : ExcludedPhrases)
   {
-    if (String.TrimStartAndEnd().Equals(Phrase.TrimStartAndEnd(), ESearchCase::IgnoreCase)) // Case insensitive match
+    const FString CleanString = String.ToLower().TrimStartAndEnd();
+    if (CleanPhrase.Contains(CleanString))
     {
       return true;
     }
@@ -801,17 +847,6 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
     FString DebugMessage = "User past message: " + Message;
     GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, DebugMessage);
     UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *DebugMessage);
-  }
-
-  if (IsExcludedPhrase(Message))
-  {
-    if (bDebug)
-    {
-      FString DebugMessage = "Detected excluded phrase in user message: " + Message;
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, DebugMessage);
-      UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *DebugMessage);
-    }
-    return false;
   }
 
   Message.TrimStartAndEndInline();

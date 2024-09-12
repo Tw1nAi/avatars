@@ -302,7 +302,12 @@ void UGraphicsSettingsWidgetBase::InitResolution()
   }
 
   Resolutions.Reset();
-  UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
+  if (!UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions))
+  {
+    UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("Failed to get supported resolutions"));
+    checkNoEntry();
+    return;
+  }
 
   ResolutionsWidget->Clear();
   for (const FIntPoint& Resolution : Resolutions)
@@ -313,12 +318,35 @@ void UGraphicsSettingsWidgetBase::InitResolution()
   }
 
   // find current resolutions index
-  FIntPoint CurrentResolution = GameUserSettings->GetScreenResolution();
-  int32 CurrentResolutionIndex = Resolutions.IndexOfByPredicate([CurrentResolution](const FIntPoint& Resolution) { return Resolution == CurrentResolution; });
+  const FIntPoint CurrentResolution = GameUserSettings->GetScreenResolution();
+  const int32 CurrentResolutionIndex = Resolutions.IndexOfByPredicate([CurrentResolution](const FIntPoint& Resolution) { return Resolution == CurrentResolution; });
 
-  check(CurrentResolutionIndex != INDEX_NONE && CurrentResolutionIndex > 0);
+  if (CurrentResolutionIndex != INDEX_NONE && CurrentResolutionIndex >= 0 && CurrentResolutionIndex < Resolutions.Num())
+  {
+    ResolutionsWidget->SetCurrentSelection(CurrentResolutionIndex);
+  }
+  else
+  {
+    UE_LOG(LogGraphicsSettingsWidgetBase, Warning, TEXT("Could not find current resolution in system provided resolutions. Current resolution: %s."), *CurrentResolution.ToString());
 
-  ResolutionsWidget->SetCurrentSelection(CurrentResolutionIndex);
+    // set full screen and the current screen resolution
+    const FIntPoint ScreenResolution = GameUserSettings->GetDesktopResolution();
+    const int32 ScreenResolutionIndex = Resolutions.IndexOfByPredicate([ScreenResolution](const FIntPoint& Resolution) { return Resolution == ScreenResolution; });
+
+    if (ScreenResolutionIndex != INDEX_NONE && ScreenResolutionIndex >= 0 && ScreenResolutionIndex < Resolutions.Num())
+    {
+      ResolutionsWidget->SetCurrentSelection(ScreenResolutionIndex);
+      UGameUserSettings::GetGameUserSettings()->SetScreenResolution(Resolutions[ScreenResolutionIndex]);
+      UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
+    }
+    else
+    {
+      const int32 LastIndex = Resolutions.Num() - 1;
+      ResolutionsWidget->SetCurrentSelection(LastIndex);
+      UGameUserSettings::GetGameUserSettings()->SetScreenResolution(Resolutions[LastIndex]);
+      UGameUserSettings::GetGameUserSettings()->ApplySettings(false);
+    }
+  }
 
   ResolutionsWidget->OnSelectionChanged.BindUObject(this, &UGraphicsSettingsWidgetBase::OnResolutionChanged);
 }

@@ -8,8 +8,8 @@ public class AvatarsTarget : TargetRules
   {
     bOverrideBuildEnvironment = true;
     Type = TargetType.Game;
-    DefaultBuildSettings = BuildSettingsVersion.V2;
-    IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
+    DefaultBuildSettings = BuildSettingsVersion.V4;
+    //IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
     ExtraModuleNames.Add("TextHelpers");
     ExtraModuleNames.Add("AiIntellect");
     ExtraModuleNames.Add("RestApi");

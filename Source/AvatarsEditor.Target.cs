@@ -6,10 +6,10 @@ public class AvatarsEditorTarget : TargetRules
 {
   public AvatarsEditorTarget(TargetInfo Target) : base(Target)
   {
-    bOverrideBuildEnvironment = true;
+    //bOverrideBuildEnvironment = true;
     Type = TargetType.Editor;
-    DefaultBuildSettings = BuildSettingsVersion.V2;
-    IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
+    DefaultBuildSettings = BuildSettingsVersion.V4;
+    //IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
     ExtraModuleNames.Add("TextHelpers");
     ExtraModuleNames.Add("AiIntellect");
     ExtraModuleNames.Add("RestApi");

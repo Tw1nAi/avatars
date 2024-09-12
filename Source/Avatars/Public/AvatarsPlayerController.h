@@ -202,16 +202,11 @@ public:
   void SetupWhisperWebsockets();
   void CleanupWebSocket();
 
-  // ! temporary bool to deal with two APIs reaching for information. The one that finishes
-  // ! this race first sets this as true and the other one that sees that it's true can init
-  // ! post fetch operations. Remove once API v1 and API v2 are consolidated into one.
-  UPROPERTY()
-  bool bApiDone;
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   TArray<FString> ExcludedPhrases;
 
-  bool IsExcludedPhrase(const FString Phrase);
+  UFUNCTION(BlueprintCallable)
+  bool IsExcludedPhrase(const FString& Phrase) const;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   bool bUseLocalTranscription = false;
