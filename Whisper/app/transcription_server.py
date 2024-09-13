@@ -37,7 +37,7 @@ class TranscriptionServer:
         )
         self.audio_stream_client = None
         self.consumer_client = None
-        self.receive_audio = True
+        self.receive_audio = False
 
         """ Audio stream """
         self.events = []
@@ -148,3 +148,7 @@ class TranscriptionServer:
             self.consumer_client.send(message)
         else:
             warn("No consumer client connected")
+
+    def set_receive_audio(self, should_receive: bool):
+        self.receive_audio = should_receive
+        info(f"Receive audio set to {self.receive_audio}")
