@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A script to handle specific CLI arguments.")
 
     # Add arguments
-    parser.add_argument('-l', '--language', type=str, default="en", help='Set the initial transcription language (default: "en")')
+    parser.add_argument('-l', '--language', type=str, default="pl", help='Set the initial transcription language (default: "pl")')
     parser.add_argument('-m', '--multilingual', action='store_true', help='Enable multilingual support')
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug mode')
     parser.add_argument('-p', '--print_in_loop', action='store_true', help='Enable printing in a loop')
@@ -63,6 +63,7 @@ if __name__ == "__main__":
         info(f'Silence detected. Pausing transcription. Current transcript: {current_transcript_text}')
         server.receive_audio = False
         transcription.pause()
+        return True
 
     transcription.add_event_handler(TranscriptEvent.REPEATED_THRESHOLD, on_final_transcript)
     transcription.add_event_handler(TranscriptEvent.SILENCE_AFTER, on_silence_detected)

@@ -1,6 +1,3 @@
-!!! skopiowałeś propozycję chata GPT i teraz trzeba to przetestować
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 import os
 import re as regex
 import threading
@@ -71,6 +68,7 @@ class TranscriptionService:
         They come from the model being trained on silent audio chunks with subtitles in movies, YouTube videos, tv shows, etc."""
         self.excluded_phrases = [
             "PARROT TV",
+            "Dziękuje za obejrzenie",
             "Thank you for your support on Patronite.",
             "Zapraszam na kolejny odcinek!",
             "Napisy stworzone przez społeczność Amara.org"
@@ -118,6 +116,7 @@ class TranscriptionService:
         of the current buffer relative to the original audio stream. It helps in recalibrating
         the system's understanding of "where" in the original audio stream the current buffer begins,
         especially after some data has been removed. """
+        # TODO: check if this could cause stacking up memory
         self.frames_offset = 0.0
 
         # """ Capturing audio stream """
@@ -156,6 +155,34 @@ class TranscriptionService:
 
     def get_events_by_category(self, category: TranscriptEvent):
         return [event.callback for event in self.events if event.category == category]
+
+    def on_silence(self):
+        events = self.get_events_by_category(TranscriptEvent.SILENCE_AFTER)
+        if len(events):
+            text = self.get_full_transcript()
+            reset_state = False
+            for event in events:
+                should_reset = event(text)
+                if should_reset: reset_state = True
+            if reset_state: self._reset_state()
+
+    #  check if there is a silence in the audio input
+    def check_silence(self):
+        if self.t_start is None:
+            if self.debug and self.print_in_loop: info("[LOOP] Started timer for silence detection")
+            self.t_start = time.time()
+
+        # has_speech = _info.duration_after_vad > 0
+        if len(self.transcript) and self.transcript[-1] != '': # or not has_speech:
+            if time.time() - self.t_start > self.speach_silence_threshold:
+                if self.debug and self.print_in_loop:
+                    info('[LOOP] Detected silence in audio input for {self.speach_silence_threshold} seconds. Adding a blank line to the transcript.')
+                self.transcript.append('')
+                self.on_silence()
+                time.sleep(0.01)
+                return True
+
+        return False
 
     def clear(self):
         if os.name == "nt":
@@ -290,23 +317,36 @@ class TranscriptionService:
                     if self.clear_before_transcript_print: self.clear()
                     info(f'[TRANSCRIPT]: {current}')
 
+                # no point moving forward if we have no frames to process
                 if self.audio_frames_buffer is None:
+                    # if self.debug and self.print_in_loop: info("[LOOP] No frames to process")
                     time.sleep(0.01)
                     continue
 
                 num_of_samples_to_skip = int((self.timestamp_offset - self.frames_offset) * self.rate)
+                # Check if the current audio chunk exceeds duration of 25 seconds.
+                if self.audio_frames_buffer[num_of_samples_to_skip:].shape[0] > 25 * self.rate:
+                    # if self.debug and self.print_in_loop: info("[LOOP] Clipping audio chunk as it exceeds 30 seconds")
 
-                if num_of_samples_to_skip >= self.audio_frames_buffer.shape[0]:
-                    # All samples skipped, wait for more data
-                    time.sleep(0.01)
-                    continue
+                    # Calculate the total duration of the audio in the buffer in seconds.
+                    duration = self.audio_frames_buffer.shape[0] / self.rate
 
+                    # Update the timestamp offset to be 5 seconds less than the total duration of the audio.
+                    # This effectively "clips" the audio buffer to discard older audio data, keeping the most recent.
+                    self.timestamp_offset = self.frames_offset + duration - 5
+
+                # Select a single audio sample from the buffer to process.
+                # if self.debug and self.print_in_loop: info("[LOOP] Selecting a single audio sample", True)
                 samples_take = max(0, (self.timestamp_offset - self.frames_offset) * self.rate)
+                # get sliced audio samples that exceed the sample_take
                 input_bytes = self.audio_frames_buffer[int(samples_take):].copy()
                 duration = input_bytes.shape[0] / self.rate
 
                 if duration < self.min_sample_duration:
-                    self.timestamp_offset += self.min_sample_duration
+                    self.check_silence()
+                    # ! this won't work
+                    # self.timestamp_offset += duration
+                    if self.debug and self.print_in_loop: info("[LOOP] sample below min duration")
                     time.sleep(0.01)
                     continue
 
@@ -321,12 +361,12 @@ class TranscriptionService:
 
                         if result is None:
                             if self.debug and self.print_in_loop: info("[LOOP] no result from transcription")
-                            self.timestamp_offset += duration
                             time.sleep(0.01)
                             continue
 
                         if _info.duration_after_vad == 0:
                             if self.debug and self.print_in_loop: info("[LOOP] VAD filtered out all audio, skipping segment")
+                            # self.on_silence()
                             self.timestamp_offset += duration
                             time.sleep(0.01)
                             continue
@@ -339,7 +379,8 @@ class TranscriptionService:
 
                             if filtered_all_segments:
                                 if self.debug and self.print_in_loop: info("[LOOP] all segments were filtered")
-                                self.timestamp_offset += duration
+                                # self.on_silence()
+                                # self.timestamp_offset += duration
                                 time.sleep(0.01)
                                 continue
 
@@ -365,27 +406,7 @@ class TranscriptionService:
                                     if reset_state: self._reset_state()
 
                         else:
-                            if self.t_start is None:
-                                if self.debug and self.print_in_loop: info("[LOOP] Started timer for silence detection")
-                                self.t_start = time.time()
-
-                            has_speech = _info.duration_after_vad > 0
-                            if len(self.transcript) and self.transcript[-1] != '' or not has_speech:
-                                if time.time() - self.t_start > self.speach_silence_threshold:
-                                    if self.debug and self.print_in_loop:
-                                        info('[LOOP] Detected silence in audio input for {self.speach_silence_threshold} seconds. Adding a blank line to the transcript.')
-                                    self.transcript.append('')
-
-                                    events = self.get_events_by_category(TranscriptEvent.SILENCE_AFTER)
-                                    if len(events):
-                                        text = self.get_full_transcript()
-                                        reset_state = False
-                                        for event in events:
-                                            should_reset = event(text)
-                                            if should_reset: reset_state = True
-                                        if reset_state: self._reset_state()
-
-                                    time.sleep(0.01)
+                            if self.check_silence():
                                     continue
 
                             if self.debug and self.print_in_loop: error("[LOOP] [ERROR] Transcription loop failed with error: no result from transcription")
