@@ -27,8 +27,8 @@ void USimundiIntellectComponent::GetAvatarsData()
       ->Then([this](const FGetAvatarsResponse& Data) mutable {
         if (!IsValid(this))
         {
-          FString Message = FString::Printf(TEXT("USimundiIntellectComponent's \"this\" reference is not valid in "
-                                                 "USimundiIntellectComponent->GetAvatars()."));
+          const FString Message = FString::Printf(TEXT("USimundiIntellectComponent's \"this\" reference is not valid in "
+                                                       "USimundiIntellectComponent->GetAvatars()."));
 
           GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
@@ -37,7 +37,7 @@ void USimundiIntellectComponent::GetAvatarsData()
 
         if (Data.Avatars.Num() == 0)
         {
-          FString Message = FString::Printf(TEXT("No avatars data received from Api, USimundiIntellectComponent"));
+          const FString Message = FString::Printf(TEXT("No avatars data received from Api, USimundiIntellectComponent"));
           GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
@@ -56,8 +56,7 @@ void USimundiIntellectComponent::GetAvatarsData()
 
         if (!bFoundMatchingAvatar)
         {
-          FString Message =
-              FString::Printf(TEXT("No matching avatar found for %s in USimundiIntellectComponent->GetAvatars()."), *this->Identity.Name);
+          FString Message = FString::Printf(TEXT("No matching avatar found for %s in USimundiIntellectComponent->GetAvatars()."), *this->Identity.Name);
 
           GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
@@ -83,9 +82,7 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
       ->Then([this, LanguageIso](const FPostConversationResponse& Response) mutable {
         if (!IsValid(this))
         {
-          FString Message = FString::Printf(
-              TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::StartNewConversation")
-          );
+          FString Message = FString::Printf(TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::StartNewConversation"));
           GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
@@ -102,9 +99,7 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
 
         if (this->OnAiResponseEvent.IsBound())
         {
-          this->OnAiResponseEvent.Broadcast(
-              Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags
-          );
+          this->OnAiResponseEvent.Broadcast(Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags);
         }
       })
       ->Run();
@@ -136,8 +131,7 @@ bool USimundiIntellectComponent::RespondTo(const FString& Message, const FString
       ->Then([this](const FPostUserMessageResponse& Response) {
         if (!IsValid(this))
         {
-          FString Message =
-              FString::Printf(TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::RespondTo"));
+          FString Message = FString::Printf(TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::RespondTo"));
           GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
@@ -149,9 +143,7 @@ bool USimundiIntellectComponent::RespondTo(const FString& Message, const FString
 
         if (this->OnAiResponseEvent.IsBound())
         {
-          this->OnAiResponseEvent.Broadcast(
-              Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags
-          );
+          this->OnAiResponseEvent.Broadcast(Response.Message.Text, Response.Message.AudioPath, Response.Propositions, Response.Message.Tags);
         }
       })
       ->Run();

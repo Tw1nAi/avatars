@@ -40,9 +40,9 @@ void URootWidget::NativeConstruct()
     if (Widget != nullptr) Widget->SetVisibility(ESlateVisibility::Collapsed);
   }
 
-  AvatarsThumbnails.Add(JanZumbachThumbnail2);
-  AvatarsThumbnails.Add(JakKowalewskiThumbnail2);
-  AvatarsThumbnails.Add(WojtekTheBearThumbnail);
+  // AvatarsThumbnails.Add(JanZumbachThumbnail2);
+  // AvatarsThumbnails.Add(JakKowalewskiThumbnail2);
+  // AvatarsThumbnails.Add(WojtekTheBearThumbnail);
 
   if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
   {
@@ -218,6 +218,7 @@ void URootWidget::ShowUserMessage(FString Message, const float HideDelay)
   verify(UserMessage != nullptr);
   if (UserMessage == nullptr) return;
 
+  HideSuggestionsText();
   Message.TrimStartAndEndInline();
   UserMessage->SetText(FText::FromString(Message.Left(1).ToUpper() + Message.RightChop(1)));
   UserMessage->SetVisibility(ESlateVisibility::Visible);
@@ -314,7 +315,7 @@ void URootWidget::ShowRecordingInProgressMessage()
     return;
   }
 
-  StatusMessge->SetText(GetTranslation("RecordingInProgressMessage"));
+  StatusMessge->SetText(GetTranslation("StateListeningMessage"));
   StatusMessge->SetVisibility(ESlateVisibility::Visible);
 }
 
@@ -420,6 +421,14 @@ void URootWidget::SelectThumbnail(AActor* SelectedAvatar)
 
   for (UCharacterThumbnailWidget* Thumb : AvatarsThumbnails)
   {
+    if (!Thumb->Avatar)
+    {
+      FString Message = FString::Printf(TEXT("Thumb->Avatar is nullptr: %s"), *Thumb->GetName());
+      UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
+      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+      continue;
+    }
+
     IAiIdentityInterface* ThumbWithIdentity = Cast<IAiIdentityInterface>(Thumb->Avatar);
     if (ThumbWithIdentity == nullptr)
     {

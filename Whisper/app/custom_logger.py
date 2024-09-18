@@ -46,7 +46,7 @@ def info(*args):
     logger.info(*args)
 
 def warn(*args):
-    logger.warn(*args)
+    logger.warning(*args)
 
 def error(*args):
     logger.error(*args)

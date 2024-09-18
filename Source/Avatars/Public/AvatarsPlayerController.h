@@ -87,12 +87,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|User Interface")
   TSubclassOf<URootWidget> RootWidgetClass;
 
-  UPROPERTY(
-      VisibleAnywhere,
-      BlueprintReadWrite,
-      Category = "Avatars Player Controller",
-      meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides)
-  )
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller", meta = (EditCondition = "bShowRuntimeProperties", EditConditionHides))
   URootWidget* RootWidget;
 
   UFUNCTION(BlueprintCallable)
@@ -235,10 +230,14 @@ public:
   /* Use this to send clear request to the Whisper server to clear its transcription memory and
    * context. */
   UFUNCTION(Blueprintcallable)
-  void ClearSpeachToText();
+  void ClearSpeechToText();
 
   UFUNCTION(Blueprintcallable)
   void EnableAudioCapture();
+  float AudioCaptureTimer = 0.0f;
+  bool bAudioCaptureBelowMinDuration = false;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Audio Capture")
+  float MinAudioCaptureDuration = 0.4f;
 
   UFUNCTION(Blueprintcallable)
   void DisableAudioCapture();

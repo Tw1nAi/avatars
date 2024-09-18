@@ -167,6 +167,7 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TSubclassOf<UCharacterThumbnailWidget> ThumbsClass;
+
   TArray<UCharacterThumbnailWidget*> AvatarsThumbnails;
 
   UFUNCTION(BlueprintCallable)
