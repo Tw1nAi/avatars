@@ -123,7 +123,7 @@ void AAvatarsPlayerController::BeginPlay()
   {
     FString WarningMessage = "No avatars found in the scene.";
     UE_LOG(LogAwatarsPlayerController, Warning, TEXT("%s"), *WarningMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, WarningMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, WarningMessage);
     return;
   }
 
@@ -190,7 +190,7 @@ bool AAvatarsPlayerController::CreateRootWidget()
   {
     FString ErrorMessage = "RootWidgetClass is not set in AAvatarsPlayerController";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *ErrorMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
     return false;
   }
 
@@ -199,7 +199,7 @@ bool AAvatarsPlayerController::CreateRootWidget()
   {
     FString ErrorMessage = "Could not create RootWidgetClass in AAvatarsPlayerController";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *ErrorMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
     return false;
   }
 
@@ -227,9 +227,9 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
 {
   FString Url = WhisperWebsocketServerProtocol + "://" + WhisperWebsocketServerURL + ":" + WhisperWebsocketPort + "/";
 
-  if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Url);
+  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Url);
 
-  WhisperWebsocket = FWebSocketsModule::Get().CreateWebSocket(Url, WhisperWebsocketServerProtocol);
+    WhisperWebsocket = FWebSocketsModule::Get().CreateWebSocket(Url, WhisperWebsocketServerProtocol);
 
   /* On Connected */
   WhisperWebsocket->OnConnected().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)]() mutable {
@@ -261,7 +261,7 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
       WeakController->bAudioCaptureBelowMinDuration = false;
       const FString InfoMessage = "Audio capture duration is below the minimum duration.";
       UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *InfoMessage);
-      GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, InfoMessage);
+      // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, InfoMessage);
       AAvatarPawn* Avatar = WeakController->GetSelectedAvatar();
       if (Avatar != nullptr)
       {
@@ -272,7 +272,7 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
 
     if (WeakController->bDebug)
     {
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, Message);
     }
 
     if (WeakController->IsExcludedPhrase(Message))
@@ -280,7 +280,7 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
       if (WeakController->bDebug)
       {
         FString DebugMessage = "Detected excluded phrase in user message: " + Message;
-        GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Orange, DebugMessage);
+        // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Orange, DebugMessage);
         UE_LOG(LogAwatarsPlayerController, Warning, TEXT("%s"), *DebugMessage);
       }
       return;
@@ -361,9 +361,9 @@ void AAvatarsPlayerController::EnableAudioCapture()
 
   const FString Message = MakeJsonString("message", "start_capture", "language", GetLanguageAsIsoString());
   WhisperWebsocket->Send(Message);
-  if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("EnableAudioCapture"));
+  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("EnableAudioCapture"));
 
-  bAudioCaptureBelowMinDuration = false;
+    bAudioCaptureBelowMinDuration = false;
   AudioCaptureTimer = GetWorld()->GetTimeSeconds();
 }
 
@@ -372,9 +372,9 @@ void AAvatarsPlayerController::DisableAudioCapture()
   if (ULog::ErrorIf(!WhisperWebsocket.IsValid(), "!WhisperWebsocket.IsValid()")) return;
 
   WhisperWebsocket->Send("stop_capture");
-  if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("DisableAudioCapture"));
+  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("DisableAudioCapture"));
 
-  bAudioCaptureBelowMinDuration = GetWorld()->GetTimeSeconds() - AudioCaptureTimer < MinAudioCaptureDuration;
+    bAudioCaptureBelowMinDuration = GetWorld()->GetTimeSeconds() - AudioCaptureTimer < MinAudioCaptureDuration;
   if (bAudioCaptureBelowMinDuration)
   {
     if (AAvatarPawn* Avatar = GetSelectedAvatar())
@@ -383,7 +383,7 @@ void AAvatarsPlayerController::DisableAudioCapture()
     }
     const FString InfoMessage = "Audio capture duration is below the minimum duration.";
     UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *InfoMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, InfoMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, InfoMessage);
   }
 }
 
@@ -509,7 +509,7 @@ void AAvatarsPlayerController::DisplayAvatarMessage(FString Message, FString Aud
     {
       FString DebugMessage(TEXT("Includes \"Long message\" tag."));
       UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *DebugMessage);
-      GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, DebugMessage);
+      // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, DebugMessage);
     }
     UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *Message);
   }
@@ -558,7 +558,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   {
     FString Message = "SelectedActor is nullptr in AAvatarsPlayerController::OnCharacterSelection";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
   }
 
   AAvatarPawn* SelectedAvatar = Cast<AAvatarPawn>(SelectedActor);
@@ -566,7 +566,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   {
     FString Message = "SelectedAvatar is nullptr in AAvatarsPlayerController::OnCharacterSelection";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
   }
 
   // ! When changing the avatar make sure to set conversation to -1 and start a new one.
@@ -576,7 +576,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   {
     FString Message = "Selected the same avatar as the current one.";
     UE_LOG(LogAwatarsPlayerController, Warning, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Message);
     return;
   }
 
@@ -597,7 +597,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
 
   if (bDebug)
   {
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name));
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name));
   }
 
   Possess(SelectedAvatar);
@@ -615,7 +615,7 @@ void AAvatarsPlayerController::OnCharacterSelection(AActor* SelectedActor)
   const bool bHasCustomCamera = SelectedAvatar->CheckCustomCamera(this);
   if (!bHasCustomCamera && bDebug)
   {
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera"));
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, *("Selected avatar: " + SelectedAvatar->AvatarData.Name + " does not specify its own camera"));
   }
 
   if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
@@ -724,7 +724,7 @@ void AAvatarsPlayerController::OnAvatarChangeTimeout()
   {
     FString Message = "NextAvatar is nullptr in AAvatarsPlayerController::OnAvatarChangeTimeout";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, Message);
     checkNoEntry();
     return;
   }
@@ -891,7 +891,7 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
   if (bDebug)
   {
     FString DebugMessage = "User past message: " + Message;
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::White, DebugMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::White, DebugMessage);
     UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *DebugMessage);
   }
 
@@ -899,8 +899,8 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
 
   if (Message == "")
   {
-    if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, TEXT("User past EMPTY message"));
-    return false;
+    if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, TEXT("User past EMPTY message"));
+      return false;
   }
 
   AAvatarPawn* Avatar = GetSelectedAvatar();
@@ -908,7 +908,7 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
   {
     FString ErrorMessage = "Could not get reference to AAvatarPawn* Avatar in AAvatarsPlayerController::SendUserMessage";
     UE_LOG(LogAwatarsPlayerController, Error, TEXT("%s"), *ErrorMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Red, ErrorMessage);
     return false;
   }
 

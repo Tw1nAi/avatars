@@ -34,17 +34,18 @@ public:
         &Errors,
         OptionalWorkingDirectory,
         // *Path,
-        bShouldEndWithParentProcess);
+        bShouldEndWithParentProcess
+    );
 
     if (!bSuccess)
     {
-      // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *Errors);
+      // // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *Errors);
       UE_LOG(LogTemp, Warning, TEXT("Could not execute process in path: %s due to error: %s"), *Path, *Errors);
       UE_LOG(LogTemp, Warning, TEXT("Output: %s"), *Output);
       return Errors;
     }
 
-    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *Errors);
+    // // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *Errors);
     UE_LOG(LogTemp, Warning, TEXT("Succesfully executed process in path: %s, OutReturnCode: %d"), *Path, OutReturnCode);
     UE_LOG(LogTemp, Warning, TEXT("Output: %s"), *Output);
     UE_LOG(LogTemp, Warning, TEXT("Errors: %s"), *Errors);
@@ -53,24 +54,18 @@ public:
 
   /* Returns the directory the application was launched from. */
   UFUNCTION(BlueprintCallable, BlueprintPure)
-  FString GetLunchPath()
-  {
-    return FPaths::LaunchDir();
-  }
+  FString GetLunchPath() { return FPaths::LaunchDir(); }
 
   /* Returns the directory the application was launched from. */
   UFUNCTION(BlueprintCallable, BlueprintPure)
-  FString GetSourcePath()
-  {
-    return FPaths::GameSourceDir();
-  }
+  FString GetSourcePath() { return FPaths::GameSourceDir(); }
 
   /* Returns the directory the application was launched from. */
   UFUNCTION(BlueprintCallable, BlueprintPure)
   FString ProjectDir()
   {
     FString ProjectDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
-    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *ProjectDir);
+    // // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, *ProjectDir);
     UE_LOG(LogTemp, Log, TEXT("Project Directory: %s"), *ProjectDir);
     return ProjectDir;
   }

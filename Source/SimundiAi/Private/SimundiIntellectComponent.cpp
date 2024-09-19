@@ -30,7 +30,7 @@ void USimundiIntellectComponent::GetAvatarsData()
           const FString Message = FString::Printf(TEXT("USimundiIntellectComponent's \"this\" reference is not valid in "
                                                        "USimundiIntellectComponent->GetAvatars()."));
 
-          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
         }
@@ -38,7 +38,7 @@ void USimundiIntellectComponent::GetAvatarsData()
         if (Data.Avatars.Num() == 0)
         {
           const FString Message = FString::Printf(TEXT("No avatars data received from Api, USimundiIntellectComponent"));
-          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
         }
@@ -58,7 +58,7 @@ void USimundiIntellectComponent::GetAvatarsData()
         {
           FString Message = FString::Printf(TEXT("No matching avatar found for %s in USimundiIntellectComponent->GetAvatars()."), *this->Identity.Name);
 
-          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
         }
@@ -71,7 +71,7 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
   if (AvatarId.IsEmpty())
   {
     FString Message = FString::Printf(TEXT("AvatarId is not set in USimundiIntellectComponent::StartNewConversation"));
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
     UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
     return;
   }
@@ -83,7 +83,7 @@ void USimundiIntellectComponent::StartNewConversation(const FString& LanguageIso
         if (!IsValid(this))
         {
           FString Message = FString::Printf(TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::StartNewConversation"));
-          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
         }
@@ -110,7 +110,7 @@ bool USimundiIntellectComponent::RespondTo(const FString& Message, const FString
   if (AvatarId.IsEmpty())
   {
     FString ErrorMessage = FString::Printf(TEXT("Api is not set in USimundiIntellectComponent::RespondTo"));
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessage);
     UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *ErrorMessage);
 
     return false;
@@ -132,13 +132,13 @@ bool USimundiIntellectComponent::RespondTo(const FString& Message, const FString
         if (!IsValid(this))
         {
           FString Message = FString::Printf(TEXT("USimundiIntellectComponent's this reference is not valid in USimundiIntellectComponent::RespondTo"));
-          GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
           UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
           return;
         }
 
         FString NumberOfMessageTags = FString::Printf(TEXT("Message has %d tags."), Response.Message.Tags.Num());
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, NumberOfMessageTags);
+        // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, NumberOfMessageTags);
         UE_LOG(LogSimundiIntellect, Display, TEXT("%s"), *NumberOfMessageTags);
 
         if (this->OnAiResponseEvent.IsBound())
@@ -159,7 +159,7 @@ void USimundiIntellectComponent::BeginPlay()
   if (Api == nullptr)
   {
     FString Message = FString::Printf(TEXT("Could not create instance of USimundiApi."));
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
     UE_LOG(LogSimundiIntellect, Error, TEXT("%s"), *Message);
     return;
   }

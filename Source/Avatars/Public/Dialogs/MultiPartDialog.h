@@ -34,7 +34,7 @@ struct FMultiPartDialog
     {
       FString Message = "Could not find any audio files in: " + AudioPath;
       UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       return false;
     }
 
@@ -51,7 +51,7 @@ struct FMultiPartDialog
     {
       FString Message = "Could not find any animation files in: " + AnimationsPath;
       UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       return false;
     }
 

@@ -51,7 +51,7 @@ void URootWidget::NativeConstruct()
     {
       LastViewportSize = FVector2D(Viewport->GetSizeXY());
       FString Message = FString::Printf(TEXT("Viewport size initialized to: %s"), *LastViewportSize.ToString());
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
       UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
     }
   }
@@ -161,22 +161,22 @@ void URootWidget::OnSendTextButtonClick()
   if (bIsCommand)
   {
     FString Command = Message.RightChop(1);
-    if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("OnSendTextButtonClick: found command: ") + Command);
+    if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("OnSendTextButtonClick: found command: ") + Command);
 
-    if (Command.Contains(PlayerController->ServicePin) && Command.Contains("options"))
-    {
-      if (bDebug)
+      if (Command.Contains(PlayerController->ServicePin) && Command.Contains("options"))
       {
-        Command = Command.Replace(*PlayerController->ServicePin, TEXT("")).TrimStartAndEnd();
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, (TEXT("OnSendTextButtonClick: executing command: ") + Command));
-      }
-      if (OptionsMenu != nullptr)
-      {
-        OptionsMenu->Show();
-        OptionsMenu->SetUseTimeout(true);
-        OptionsMenu->StartMenuTimeout(PlayerController->MenuTimeout);
-      }
-    };
+        if (bDebug)
+        {
+          Command = Command.Replace(*PlayerController->ServicePin, TEXT("")).TrimStartAndEnd();
+          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, (TEXT("OnSendTextButtonClick: executing command: ") + Command));
+        }
+        if (OptionsMenu != nullptr)
+        {
+          OptionsMenu->Show();
+          OptionsMenu->SetUseTimeout(true);
+          OptionsMenu->StartMenuTimeout(PlayerController->MenuTimeout);
+        }
+      };
   }
   else
   {
@@ -411,7 +411,7 @@ void URootWidget::SelectThumbnail(AActor* SelectedAvatar)
   {
     FString Message = FString::Printf(TEXT("SelectedAvatar is not IAiIdentityInterface: %s"), *SelectedAvatar->GetName());
     UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
     return;
   }
 
@@ -421,7 +421,7 @@ void URootWidget::SelectThumbnail(AActor* SelectedAvatar)
     {
       FString Message = FString::Printf(TEXT("Thumb->Avatar is nullptr: %s"), *Thumb->GetName());
       UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
       continue;
     }
 
@@ -430,7 +430,7 @@ void URootWidget::SelectThumbnail(AActor* SelectedAvatar)
     {
       FString Message = FString::Printf(TEXT("Thumb->Avatar is not IAiIdentityInterface: %s"), *Thumb->Avatar->GetName());
       UE_LOG(LogTemp, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Message);
       continue;
     }
     Thumb->UpdateSelectionNative(ThumbWithIdentity->GetIdentity().Name == SelectedWithIdentity->GetIdentity().Name);
@@ -496,7 +496,7 @@ void URootWidget::OnViewportResized(FViewport* Viewport, uint32 Index)
   {
     LastViewportSize = CurrentViewportSize;
     FString Message = FString::Printf(TEXT("Viewport size changed to: %s"), *CurrentViewportSize.ToString());
-    GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, Message);
     UE_LOG(LogTemp, Log, TEXT("%s"), *Message);
   }
 }

@@ -242,7 +242,7 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     {
       FString Message = FString::Printf(TEXT("Failed to create widget for setting %s"), *Setting.DefaultSettingName);
       UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       continue;
     }
 
@@ -252,7 +252,7 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
     {
       FString Message = FString::Printf(TEXT("Failed to create selection widget for setting %s"), *Setting.DefaultSettingName);
       UE_LOG(LogGraphicsSettingsWidgetBase, Error, TEXT("%s"), *Message);
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+      // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
       continue;
     }
 
@@ -311,7 +311,7 @@ void UGraphicsSettingsWidgetBase::GenerateDefaultOptionsWidgets()
       break;
     }
 
-    //SelectionWidget->SetCurrentSelection(0);
+    // SelectionWidget->SetCurrentSelection(0);
 
     if (OptionsContainer && OptionsContainer->IsA<UPanelWidget>())
     {
@@ -481,7 +481,7 @@ void UGraphicsSettingsWidgetBase::OnOverallQualityChanged(const int32 NewIndex)
   }
 
   GameUserSettings->SetOverallScalabilityLevel(NewIndex);
-  //GameUserSettings->SetOverallScalabilityLevel(bIsCustomQuality ? -1 : NewIndex);
+  // GameUserSettings->SetOverallScalabilityLevel(bIsCustomQuality ? -1 : NewIndex);
   SetSettingsState(false);
 }
 

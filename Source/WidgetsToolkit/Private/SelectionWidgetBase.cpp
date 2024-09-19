@@ -52,7 +52,7 @@ void USelectionWidgetBase::SetCurrentSelection(const int32 Index)
   {
     const FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), Index, *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
 
@@ -71,7 +71,7 @@ UWidget* USelectionWidgetBase::OnNavigation(EUINavigation InNavigation)
   {
     FString Message = FString::Printf(TEXT("No options provided for the selection widget: %s"), *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return this;
   }
 
@@ -100,9 +100,9 @@ bool USelectionWidgetBase::CheckLabelWidget()
   {
     const FString Message = FString::Printf(TEXT("No label widget provided for the selection widget: %s"), *OptionName);
     UE_LOG(LogButtonSelectionWidget, Warning, TEXT("%s"), *Message);
-    //FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Warning);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
-    //verify(false);
+    // FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Warning);
+    //  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // verify(false);
     return false;
   }
 
@@ -115,7 +115,7 @@ void USelectionWidgetBase::UpdateSelectionText()
   {
     const FString Message = FString::Printf(TEXT("Invalid index %d provided for the selection widget: %s"), SelectedOptionIndex, *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
 
@@ -125,7 +125,7 @@ void USelectionWidgetBase::UpdateSelectionText()
   {
     const FString Message = FString::Printf(TEXT("Null label provided for the selection widget: %s"), *OptionName);
     UE_LOG(LogButtonSelectionWidget, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
 
@@ -135,9 +135,8 @@ void USelectionWidgetBase::UpdateSelectionText()
 
     const FString Message = FString::Printf(TEXT("Updating selection widget: %s, new option: %s, index: %d"), *OptionName, *Label.ToString(), SelectedOptionIndex);
     UE_LOG(LogButtonSelectionWidget, Log, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, Message);
   }
-  
 }
 
 void USelectionWidgetBase::SelectPrevious()

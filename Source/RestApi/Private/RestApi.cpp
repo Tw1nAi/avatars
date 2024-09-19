@@ -25,7 +25,7 @@ void URestApi::OnError(FString ErrorMessasge = FString(TEXT("Api Error")))
   // TODO: handle errors
   if (!bDebug) return;
 
-  GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessasge);
+  // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, ErrorMessasge);
   UE_LOG(LogTemp, Warning, TEXT("%s"), *ErrorMessasge);
   FDebug::DumpStackTraceToLog(ELogVerbosity::Type::Error);
 }

@@ -13,30 +13,27 @@ bool UAiIntellectComponent::GetOwnerIdentity()
   AActor* ComponentOwner = GetOwner();
   if (ComponentOwner == nullptr)
   {
-    FString WarningMessage =
-        FString::Printf(TEXT("ComponentOwner is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
+    FString WarningMessage = FString::Printf(TEXT("ComponentOwner is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
     UE_LOG(LogAiIntellect, Warning, TEXT("%s"), *WarningMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, WarningMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, WarningMessage);
     return false;
   }
 
   IAiIdentityInterface* OwnerWithIdentity = Cast<IAiIdentityInterface>(ComponentOwner);
   if (OwnerWithIdentity == nullptr)
   {
-    FString WarningMessage =
-        FString::Printf(TEXT("OwnerWithIdentity is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
+    FString WarningMessage = FString::Printf(TEXT("OwnerWithIdentity is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
     UE_LOG(LogAiIntellect, Warning, TEXT("%s"), *WarningMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, WarningMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, WarningMessage);
     return false;
   }
 
   Identity = OwnerWithIdentity->GetIdentity();
   if (!Identity.IsValid())
   {
-    FString ErrorMessage =
-        FString::Printf(TEXT("AvatarData is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
+    FString ErrorMessage = FString::Printf(TEXT("AvatarData is not valid for %s in UAiIntellectComponent::GetOwnerIdentity"), *GetOwner()->GetName());
     UE_LOG(LogAiIntellect, Error, TEXT("%s"), *ErrorMessage);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, ErrorMessage);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, ErrorMessage);
     return false;
   }
 

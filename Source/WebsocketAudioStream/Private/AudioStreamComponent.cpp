@@ -42,14 +42,7 @@ void UAudioStreamComponent::GetDefaultAudioCaptureDeviceInfo()
   {
     SampleRate = DeviceInfo.PreferredSampleRate;
     NumberOfChannels = DeviceInfo.InputChannels;
-    UE_LOG(
-        LogAudioStreamComponent,
-        Log,
-        TEXT("Default audio device: %s, Sample Rate: %d, Channels: %d"),
-        *DeviceInfo.DeviceName,
-        SampleRate,
-        NumberOfChannels
-    );
+    UE_LOG(LogAudioStreamComponent, Log, TEXT("Default audio device: %s, Sample Rate: %d, Channels: %d"), *DeviceInfo.DeviceName, SampleRate, NumberOfChannels);
   }
   else
   {
@@ -80,12 +73,8 @@ bool UAudioStreamComponent::SetupWebsocket()
     UE_LOG(LogAudioStreamComponent, Display, TEXT("Audio Stream Component Websocket Connected!"));
     this->Socket->Send("open_audio_stream");
   });
-  Socket->OnMessage().AddLambda([](const FString& Message) {
-    UE_LOG(LogAudioStreamComponent, Display, TEXT("[INFO] Received: %s"), *Message);
-  });
-  Socket->OnConnectionError().AddLambda([this](const FString& Error) {
-    UE_LOG(LogAudioStreamComponent, Error, TEXT("[ERROR] Received: %s"), *Error);
-  });
+  Socket->OnMessage().AddLambda([](const FString& Message) { UE_LOG(LogAudioStreamComponent, Display, TEXT("[INFO] Received: %s"), *Message); });
+  Socket->OnConnectionError().AddLambda([this](const FString& Error) { UE_LOG(LogAudioStreamComponent, Error, TEXT("[ERROR] Received: %s"), *Error); });
   Socket->OnClosed().AddLambda([](int32 StatusCode, const FString& Reason, bool bWasClean) {
     UE_LOG(LogAudioStreamComponent, Error, TEXT("Closed: %d, %s, %d"), StatusCode, *Reason, bWasClean);
   });
@@ -113,7 +102,7 @@ void UAudioStreamComponent::StartAudioStream()
   {
     FString Message = FString::Printf(TEXT("Failed to create a new audio capture object."));
     UE_LOG(LogAudioStreamComponent, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
 
@@ -123,8 +112,7 @@ void UAudioStreamComponent::StartAudioStream()
     return;
   }
 
-  OnAudioGenerateDelegate =
-      FOnAudioGenerate([this](const float* InAudio, int32 NumSamples) mutable { this->OnAudioGenerate(InAudio, NumSamples); });
+  OnAudioGenerateDelegate = FOnAudioGenerate([this](const float* InAudio, int32 NumSamples) mutable { this->OnAudioGenerate(InAudio, NumSamples); });
   AudioCapture->AddGeneratorDelegate(OnAudioGenerateDelegate);
 
   Audio::FAudioCaptureDeviceParams Params;
@@ -141,7 +129,7 @@ void UAudioStreamComponent::StartAudioStream()
         Params.DeviceIndex
     );
     UE_LOG(LogAudioStreamComponent, Error, TEXT("%s"), *Message);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Message);
     return;
   }
   AudioCapture->StartCapturingAudio();
@@ -198,19 +186,9 @@ void UAudioStreamComponent::SendAudioData()
 
 void UAudioStreamComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-  UE_LOG(
-      LogAudioStreamComponentTick,
-      VeryVerbose,
-      TEXT("AudioBuffer.Num() >= ChunkSize: %s"),
-      AudioBuffer.Num() >= ChunkSize ? TEXT("true") : TEXT("false")
-  );
+  UE_LOG(LogAudioStreamComponentTick, VeryVerbose, TEXT("AudioBuffer.Num() >= ChunkSize: %s"), AudioBuffer.Num() >= ChunkSize ? TEXT("true") : TEXT("false"));
   UE_LOG(LogAudioStreamComponentTick, Verbose, TEXT("Socket.IsValid(): %s"), Socket && Socket.IsValid() ? TEXT("true") : TEXT("false"));
-  UE_LOG(
-      LogAudioStreamComponentTick,
-      VeryVerbose,
-      TEXT("Socket->IsConnected(): %s"),
-      Socket && Socket->IsConnected() ? TEXT("true") : TEXT("false")
-  );
+  UE_LOG(LogAudioStreamComponentTick, VeryVerbose, TEXT("Socket->IsConnected(): %s"), Socket && Socket->IsConnected() ? TEXT("true") : TEXT("false"));
 
   if (bShouldRun) SendAudioData();
 }
