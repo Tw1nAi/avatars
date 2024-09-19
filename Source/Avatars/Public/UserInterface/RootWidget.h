@@ -10,6 +10,7 @@
 #include "Components/GridPanel.h"
 #include "Components/MultiLineEditableTextBox.h"
 #include "Components/Overlay.h"
+#include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Delegates/Delegate.h"
@@ -108,6 +109,9 @@ public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UOverlay* CharacterSelection;
 
+  UFUNCTION(BlueprintCallable)
+  void SetCharacterSelectionVisibility(bool bVisible) { CharacterSelection->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); }
+
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   ULanguageSwitcherWidget* LanguageSwitcher;
 
@@ -127,13 +131,7 @@ public:
   void HideStatusMessage();
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UCharacterThumbnailWidget* JanZumbachThumbnail2;
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UCharacterThumbnailWidget* JakKowalewskiThumbnail2;
-
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UCharacterThumbnailWidget* WojtekTheBearThumbnail;
+  UPanelWidget* CharactersThumbnails;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UOverlay* UserTextInputBox;

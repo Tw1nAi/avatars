@@ -124,9 +124,32 @@ void AAvatarsPlayerController::BeginPlay()
     FString WarningMessage = "No avatars found in the scene.";
     UE_LOG(LogAwatarsPlayerController, Warning, TEXT("%s"), *WarningMessage);
     GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, WarningMessage);
+    return;
   }
 
-  RootWidget->CreateAvatarsThumbnails(SpawnedAvatars);
+  TArray<AActor*> Removed;
+  SpawnedAvatars.RemoveAll([&Removed](AAvatarPawn* Avatar) {
+    if (!Avatar->bEnabled)
+    {
+      Removed.Add(Avatar);
+      return true;
+    };
+    return false;
+  });
+  for (AActor* Actor : Removed)
+  {
+    Actor->Destroy();
+  }
+
+  if (SpawnedAvatars.Num() > 1)
+  {
+    SpawnedAvatars.Sort([](const AAvatarPawn& A, const AAvatarPawn& B) { return A.Order < B.Order; });
+    RootWidget->CreateAvatarsThumbnails(SpawnedAvatars);
+  }
+  else
+  {
+    RootWidget->SetCharacterSelectionVisibility(false);
+  }
 
   OnCharacterSelection(GetDefaultAvatar());
   ScheduleHideLoadingScreen();
@@ -136,8 +159,6 @@ void AAvatarsPlayerController::BeginPlay()
     SetupWhisperWebsockets();
     ConnectToWhisperServer();
   }
-
-  // ScheduleHideLoadingScreen();
 }
 
 void AAvatarsPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -840,11 +861,6 @@ AAvatarPawn* AAvatarsPlayerController::GetDefaultAvatar() const
   {
     checkNoEntry();
     return nullptr;
-  }
-
-  for (TObjectPtr<AAvatarPawn> Avatar : SpawnedAvatars)
-  {
-    if (Avatar->bIsDefault) return Avatar;
   }
 
   return SpawnedAvatars[0];

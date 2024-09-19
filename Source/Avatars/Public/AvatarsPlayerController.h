@@ -70,7 +70,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller")
   bool bDebug = false;
 
-  /* This method should return either avatar with bIsDefault set to true or the first avatar found on the map. */
+  /* This method should return the first avatar found on the map. */
   UFUNCTION(BlueprintCallable, Blueprintpure)
   AAvatarPawn* GetDefaultAvatar() const;
 

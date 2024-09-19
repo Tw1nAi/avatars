@@ -36,9 +36,14 @@ class AVATARS_API AAvatarPawn : public APawn, public IAiIdentityInterface
 public:
   AAvatarPawn();
 
-  /* Use this to mark default avatar that will be displayed as first when the app starts. */
+  /* If set above 0 (zero) it will be used to place avatar in order from smallest to the biggest order value. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
-  bool bIsDefault;
+  int32 Order = 0;
+
+  /* Use this to exclude avatars in the scene from being displayed. The characters that have bEnabled set to "false" will be removed from the scene on the controller's BeginPlay()
+   * call. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
+  bool bEnabled = true;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Avatar")
   TObjectPtr<UAiIntellectComponent> IntellectComponent;

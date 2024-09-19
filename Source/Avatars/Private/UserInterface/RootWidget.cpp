@@ -40,10 +40,6 @@ void URootWidget::NativeConstruct()
     if (Widget != nullptr) Widget->SetVisibility(ESlateVisibility::Collapsed);
   }
 
-  // AvatarsThumbnails.Add(JanZumbachThumbnail2);
-  // AvatarsThumbnails.Add(JakKowalewskiThumbnail2);
-  // AvatarsThumbnails.Add(WojtekTheBearThumbnail);
-
   if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
   {
     // Bind to the viewport resize event
@@ -453,17 +449,23 @@ void URootWidget::OnCharacterThumbnailClick(AActor* SelectedAvatar)
 
 void URootWidget::CreateAvatarsThumbnails(TArray<AAvatarPawn*> SpawnedAvatars)
 {
-  if (ULog::ErrorIf(AvatarsThumbnails.Num() == 0, TEXT("No AvatarsThumbnails"))) return;
+  if (!GetController()) return;
+  if (ULog::ErrorIf(ThumbsClass == nullptr, TEXT("No widget class selected for avatar Thumbnail."))) return;
 
+  CharactersThumbnails->ClearChildren();
   for (int32 i = 0; i < SpawnedAvatars.Num(); i++)
   {
     AAvatarPawn* Avatar = SpawnedAvatars[i];
-    UCharacterThumbnailWidget* ThumbWidget = AvatarsThumbnails[i];
+    // UCharacterThumbnailWidget* ThumbWidget = AvatarsThumbnails[i];
+    UCharacterThumbnailWidget* ThumbWidget = CreateWidget<UCharacterThumbnailWidget>(PlayerController, ThumbsClass);
+    if (ULog::ErrorIf(ThumbWidget == nullptr, TEXT("Failed to create widget for avatar."))) continue;
+
     if (Avatar != nullptr && ThumbWidget != nullptr)
     {
       ThumbWidget->Avatar = Avatar;
       ThumbWidget->UpdateImage(Avatar->AvatarData.ThumbnailImage);
       ThumbWidget->OnClickEvent.AddUObject(this, &URootWidget::OnCharacterThumbnailClick);
+      CharactersThumbnails->AddChild(ThumbWidget);
     }
   }
 }
