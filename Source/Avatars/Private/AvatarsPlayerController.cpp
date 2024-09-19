@@ -227,9 +227,9 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
 {
   FString Url = WhisperWebsocketServerProtocol + "://" + WhisperWebsocketServerURL + ":" + WhisperWebsocketPort + "/";
 
-  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Url);
+  // if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Url);
 
-    WhisperWebsocket = FWebSocketsModule::Get().CreateWebSocket(Url, WhisperWebsocketServerProtocol);
+  WhisperWebsocket = FWebSocketsModule::Get().CreateWebSocket(Url, WhisperWebsocketServerProtocol);
 
   /* On Connected */
   WhisperWebsocket->OnConnected().AddLambda([WeakController = TWeakObjectPtr<AAvatarsPlayerController>(this)]() mutable {
@@ -361,9 +361,9 @@ void AAvatarsPlayerController::EnableAudioCapture()
 
   const FString Message = MakeJsonString("message", "start_capture", "language", GetLanguageAsIsoString());
   WhisperWebsocket->Send(Message);
-  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("EnableAudioCapture"));
+  // if (bDebug)  GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("EnableAudioCapture"));
 
-    bAudioCaptureBelowMinDuration = false;
+  bAudioCaptureBelowMinDuration = false;
   AudioCaptureTimer = GetWorld()->GetTimeSeconds();
 }
 
@@ -372,9 +372,9 @@ void AAvatarsPlayerController::DisableAudioCapture()
   if (ULog::ErrorIf(!WhisperWebsocket.IsValid(), "!WhisperWebsocket.IsValid()")) return;
 
   WhisperWebsocket->Send("stop_capture");
-  if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("DisableAudioCapture"));
+  // if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, TEXT("DisableAudioCapture"));
 
-    bAudioCaptureBelowMinDuration = GetWorld()->GetTimeSeconds() - AudioCaptureTimer < MinAudioCaptureDuration;
+  bAudioCaptureBelowMinDuration = GetWorld()->GetTimeSeconds() - AudioCaptureTimer < MinAudioCaptureDuration;
   if (bAudioCaptureBelowMinDuration)
   {
     if (AAvatarPawn* Avatar = GetSelectedAvatar())
@@ -899,8 +899,8 @@ bool AAvatarsPlayerController::SendUserMessage(FString Message)
 
   if (Message == "")
   {
-    if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, TEXT("User past EMPTY message"));
-      return false;
+    // if (bDebug) GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, TEXT("User past EMPTY message"));
+    return false;
   }
 
   AAvatarPawn* Avatar = GetSelectedAvatar();

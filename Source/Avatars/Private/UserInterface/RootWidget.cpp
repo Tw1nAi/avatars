@@ -161,22 +161,22 @@ void URootWidget::OnSendTextButtonClick()
   if (bIsCommand)
   {
     FString Command = Message.RightChop(1);
-    if (bDebug) // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("OnSendTextButtonClick: found command: ") + Command);
+    // if (bDebug)  GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("OnSendTextButtonClick: found command: ") + Command);
 
-      if (Command.Contains(PlayerController->ServicePin) && Command.Contains("options"))
+    if (Command.Contains(PlayerController->ServicePin) && Command.Contains("options"))
+    {
+      if (bDebug)
       {
-        if (bDebug)
-        {
-          Command = Command.Replace(*PlayerController->ServicePin, TEXT("")).TrimStartAndEnd();
-          // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, (TEXT("OnSendTextButtonClick: executing command: ") + Command));
-        }
-        if (OptionsMenu != nullptr)
-        {
-          OptionsMenu->Show();
-          OptionsMenu->SetUseTimeout(true);
-          OptionsMenu->StartMenuTimeout(PlayerController->MenuTimeout);
-        }
-      };
+        Command = Command.Replace(*PlayerController->ServicePin, TEXT("")).TrimStartAndEnd();
+        // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, (TEXT("OnSendTextButtonClick: executing command: ") + Command));
+      }
+      if (OptionsMenu != nullptr)
+      {
+        OptionsMenu->Show();
+        OptionsMenu->SetUseTimeout(true);
+        OptionsMenu->StartMenuTimeout(PlayerController->MenuTimeout);
+      }
+    };
   }
   else
   {
