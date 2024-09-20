@@ -392,8 +392,7 @@ void AAvatarsPlayerController::SetLanguage(EAvatarLanguage InLanguage)
   this->DisableInput(this);
   if (RootWidget != nullptr)
   {
-    RootWidget->ShowLoadingScreen();
-    RootWidget->HideUserTextBox();
+    RootWidget->OnLanguageSwitch(InLanguage);
   }
 
   Language = InLanguage;

@@ -112,9 +112,6 @@ public:
   UFUNCTION(BlueprintCallable)
   void SetCharacterSelectionVisibility(bool bVisible) { CharacterSelection->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); }
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  ULanguageSwitcherWidget* LanguageSwitcher;
-
   UFUNCTION()
   void OnLanguageSwitch(EAvatarLanguage Language);
 
@@ -194,9 +191,6 @@ public:
 
   UFUNCTION(BlueprintCallable, BlueprintPure)
   EAvatarLanguage GetAvatarLanguage();
-
-  UFUNCTION(BlueprintCallable)
-  void SetLanguage(EAvatarLanguage InLanguage);
 
   UFUNCTION(BlueprintCallable, BlueprintPure)
   FText GetTranslation(FName Key);

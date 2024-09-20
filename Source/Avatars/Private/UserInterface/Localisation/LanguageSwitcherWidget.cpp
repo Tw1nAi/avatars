@@ -32,7 +32,10 @@ void ULanguageSwitcherWidget::SynchronizeProperties()
     ButtonsBox->AddChild(Button);
 
     AAvatarsPlayerController* PlayerController = Cast<AAvatarsPlayerController>(GetOwningPlayer());
-    if (PlayerController != nullptr) Button->SetSelected(Button->IsLanguage(PlayerController->Language));
+    if (PlayerController != nullptr)
+    {
+      Button->SetSelected(Button->IsLanguage(PlayerController->Language));
+    };
   }
 }
 

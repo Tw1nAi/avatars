@@ -23,11 +23,6 @@ void URootWidget::NativeConstruct()
     SendTextButton->OnClicked.AddDynamic(this, &URootWidget::OnSendTextButtonClick);
   }
 
-  if (LanguageSwitcher != nullptr)
-  {
-    LanguageSwitcher->OnLanguageSwitchEvent.AddDynamic(this, &URootWidget::OnLanguageSwitch);
-  }
-
   HiddenWidgets.Add(StatusMessge);
   HiddenWidgets.Add(UserTextInputBox);
   HiddenWidgets.Add(OptionsMenu);
@@ -247,9 +242,12 @@ void URootWidget::HideLoadingScreen()
 
 void URootWidget::OnLanguageSwitch(EAvatarLanguage Language)
 {
+  ShowLoadingScreen();
+  HideUserTextBox();
+  HideSuggestionsText();
+  HideAvatarMessage();
   StatusMessge->SetVisibility(ESlateVisibility::Collapsed);
   UserMessage->SetVisibility(ESlateVisibility::Collapsed);
-  SetLanguage(Language);
   OnLanguageSwitchEvent(Language);
 }
 
@@ -260,15 +258,6 @@ EAvatarLanguage URootWidget::GetAvatarLanguage()
     return EAvatarLanguage::PL;
   }
   return PlayerController->Language;
-}
-
-void URootWidget::SetLanguage(EAvatarLanguage InLanguage)
-{
-  if (!GetController())
-  {
-    return;
-  }
-  PlayerController->SetLanguage(InLanguage);
 }
 
 FText URootWidget::GetTranslation(FName Key)
