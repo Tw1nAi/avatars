@@ -180,6 +180,9 @@ public:
 
   FVector CameraOffset;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatar")
+  TObjectPtr<AActor> ViewTargetActor;
+
 protected:
   virtual void BeginPlay() override;
 
