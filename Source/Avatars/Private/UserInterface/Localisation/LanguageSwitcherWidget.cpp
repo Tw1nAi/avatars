@@ -15,7 +15,7 @@ void ULanguageSwitcherWidget::NativeConstruct()
 void ULanguageSwitcherWidget::SynchronizeProperties()
 {
   Super::SynchronizeProperties();
-
+  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("SynchronizeProperties"));
   if (LanguageButtonClass == nullptr) return;
 
   ButtonsBox->ClearChildren();
