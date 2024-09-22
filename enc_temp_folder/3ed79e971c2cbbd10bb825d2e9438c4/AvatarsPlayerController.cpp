@@ -894,16 +894,8 @@ bool AAvatarsPlayerController::IsExcludedPhrase(const FString& Phrase) const
   const FString CleanPhrase = Phrase.ToLower().TrimStartAndEnd();
   for (const FString& String : ExcludedPhrases)
   {
-    FString CleanString = String.TrimStartAndEnd();
-
-    // if its not one word phrase, make it lowercase,
-    // otherwise keep it as it is to avoid triggering
-    // single words to be found within other words.
-    if (String.Contains(" "))
-    {
-      CleanString = CleanString.ToLower();
-    }
-    if (CleanPhrase.Contains(CleanString, ESearchCase::Type::CaseSensitive))
+    const FString CleanString = String.ToLower().TrimStartAndEnd();
+    if (CleanPhrase.Contains(CleanString))
     {
       return true;
     }

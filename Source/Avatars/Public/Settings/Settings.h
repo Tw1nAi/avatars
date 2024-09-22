@@ -11,16 +11,23 @@ struct FConversationSettings
 {
   GENERATED_BODY()
 
+  static inline const FString RestApiName = FString("Rest API");
+  static inline const FString OpenAiApiName = FString("Open.ai API");
+
 public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString TranscriptionApi = FString(TEXT("Rest Api"));
+  FString GetTranscriptionApi() const;
+  void SetTranscriptionApi(const FString& NewApi);
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float AvatarChangeTimeout = 0.0f;
   FText GetAvatarChangeTimeoutText() const;
+  void SetAvatarChangeTimeout(const float NewTimeout);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float IdleGreetingTimeout = 0.0f;
   FText GetIdleGreetingTimeoutText() const;
-
-  void SetAvatarChangeTimeout(const float NewTimeout);
   void SetIdleGreetingTimeout(const float NewTimeout);
 };
 

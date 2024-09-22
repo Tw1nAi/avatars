@@ -2,13 +2,20 @@
 
 #pragma once
 
+// Engine
 #include "Components/CheckBox.h"
+#include "Components/ComboBoxString.h"
 #include "Components/EditableText.h"
 #include "CoreMinimal.h"
+#include "Styling/SlateTypes.h"
 #include "WidgetBase.h"
+
+// Custom
 #include "Utils/Public/Debouncer.h"
 
 #include "ConversationOptionsWidget.generated.h"
+
+DECLARE_LOG_CATEGORY_EXTERN(LogConversationOptionsWidget, Log, All);
 
 class AAvatarsPlayerController;
 
@@ -19,6 +26,13 @@ class AVATARS_API UConversationOptionsWidget : public UWidgetBase
 
 public:
   virtual void NativeConstruct() override;
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
+  UComboBoxString* TranscriptionApiComboBox;
+  UFUNCTION() void OnTranscriptionApiChange(FString ApiString, ESelectInfo::Type SelectionType);
+  /* Transcription change timeout */
+  void SetTranscriptionApi(const FString& Api);
+  FString LastSavedApi;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UEditableText* AvatarChangeDelayInput;

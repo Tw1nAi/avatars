@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Log.h"
 #include "TimerManager.h"
 
 #include "Debouncer.generated.h"
@@ -41,8 +42,11 @@ public:
     // Set the timer to call the function after the specified delay
     World->GetTimerManager().SetTimer(
         TimerHandle,
-        FTimerDelegate::CreateLambda([&] {
-          if (this) this->TriggerFunction();
+        FTimerDelegate::CreateLambda([this] {
+          {
+            if (ULog::ErrorIf(!this, "Debouncer is invalid")) return;
+            this->TriggerFunction();
+          }
         }),
         Delay,
         false

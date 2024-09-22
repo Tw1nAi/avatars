@@ -2,19 +2,29 @@
 
 #include "Settings/Settings.h"
 
+FString FConversationSettings::GetTranscriptionApi() const
+{
+  return TranscriptionApi;
+}
+
+void FConversationSettings::SetTranscriptionApi(const FString& NewApi)
+{
+  TranscriptionApi = NewApi;
+}
+
 FText FConversationSettings::GetAvatarChangeTimeoutText() const
 {
   return FText::FromString(FString::SanitizeFloat(AvatarChangeTimeout));
 }
 
-FText FConversationSettings::GetIdleGreetingTimeoutText() const
-{
-  return FText::FromString(FString::SanitizeFloat(IdleGreetingTimeout));
-}
-
 void FConversationSettings::SetAvatarChangeTimeout(const float NewTimeout)
 {
   AvatarChangeTimeout = NewTimeout;
+}
+
+FText FConversationSettings::GetIdleGreetingTimeoutText() const
+{
+  return FText::FromString(FString::SanitizeFloat(IdleGreetingTimeout));
 }
 
 void FConversationSettings::SetIdleGreetingTimeout(const float NewTimeout)

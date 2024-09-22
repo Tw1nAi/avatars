@@ -205,6 +205,7 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   bool bUseLocalTranscription = false;
+  void SetUseLocalTranscription(bool bInUseLocalTranscription);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   FString WhisperWebsocketServerProtocol = TEXT("ws");

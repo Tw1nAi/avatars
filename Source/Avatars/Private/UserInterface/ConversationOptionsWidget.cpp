@@ -9,23 +9,38 @@
 #include "Log.h"
 #include "Persistance/PersistanceController.h"
 
+DEFINE_LOG_CATEGORY(LogConversationOptionsWidget);
+
 void UConversationOptionsWidget::NativeConstruct()
 {
-  if (AvatarChangeDelayInput != nullptr)
+  if (ULog::ErrorIf(IdleGreetingTimeoutInput == nullptr, "IdleGreetingTimeoutInput is not valid")) return;
+  if (ULog::ErrorIf(AvatarChangeDelayInput == nullptr, "AvatarChangeDelayInput is not valid")) return;
+  if (ULog::ErrorIf(TranscriptionApiComboBox == nullptr, "TranscriptionApiComboBox is not valid")) return;
+
+  AvatarChangeDelayInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnAvatarsChangeDelayChange);
+
+  IdleGreetingTimeoutInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnIdleGreetingTimeoutChange);
+
+  if (ULog::ErrorIf(!GetController(), "Could not get player controller")) return;
+
+  AvatarChangeDelayInput->SetText(PlayerController->ChangeAvatarTimeout.GetDelayAsText());
+  IdleGreetingTimeoutInput->SetText(PlayerController->IdleGreetingTimeout.GetDelayAsText());
+  TranscriptionApiComboBox->ClearOptions();
+  TranscriptionApiComboBox->AddOption(FConversationSettings::RestApiName);
+  TranscriptionApiComboBox->AddOption(FConversationSettings::OpenAiApiName);
+
+  if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
   {
-    AvatarChangeDelayInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnAvatarsChangeDelayChange);
+    FString Api = Persistance->ConversationSettings.TranscriptionApi;
+    if (Api.IsEmpty())
+    {
+      Api = FString(FConversationSettings::RestApiName);
+    }
+    TranscriptionApiComboBox->SetSelectedOption(Api);
+    SetTranscriptionApi(Api);
   }
 
-  if (IdleGreetingTimeoutInput != nullptr)
-  {
-    IdleGreetingTimeoutInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnIdleGreetingTimeoutChange);
-  }
-
-  if (GetController())
-  {
-    AvatarChangeDelayInput->SetText(PlayerController->ChangeAvatarTimeout.GetDelayAsText());
-    IdleGreetingTimeoutInput->SetText(PlayerController->IdleGreetingTimeout.GetDelayAsText());
-  }
+  TranscriptionApiComboBox->OnSelectionChanged.AddDynamic(this, &UConversationOptionsWidget::OnTranscriptionApiChange);
 }
 
 bool UConversationOptionsWidget::GetController()
@@ -190,4 +205,48 @@ void UConversationOptionsWidget::OnIdleGreetingTimeoutChange(const FText& InText
       },
       World
   );
+}
+
+void UConversationOptionsWidget::SetTranscriptionApi(const FString& ApiString)
+{
+  if (ApiString.IsEmpty())
+  {
+    ULog::Warn("Transcription Api settings combo box submited empty string.");
+    return;
+  }
+
+  if (ApiString == LastSavedApi)
+  {
+    return;
+  }
+
+  UWorld* World = GetWorld();
+  if (ULog::ErrorIf(World == nullptr, "World is not valid.")) return;
+
+  UPersistanceController* Persistance = UAvatarsGame::GetPersistance(World);
+  if (ULog::ErrorIf(Persistance == nullptr, "Persistance is not valid")) return;
+
+  FString Api = ApiString;
+  if (Api.IsEmpty())
+  {
+    Api = FConversationSettings::RestApiName;
+  }
+
+  if (!GetController())
+  {
+    ULog::Error("Could not get player controller");
+    return;
+  }
+
+  Persistance->ConversationSettings.SetTranscriptionApi(Api);
+  PlayerController->SetUseLocalTranscription(Api == FConversationSettings::RestApiName);
+  Persistance->SaveAll();
+  LastSavedApi = Api;
+  UE_LOG(LogConversationOptionsWidget, Display, TEXT("Transcription API changed to %s"), *Api);
+  return;
+}
+
+void UConversationOptionsWidget::OnTranscriptionApiChange(FString ApiString, ESelectInfo::Type SelectionType)
+{
+  SetTranscriptionApi(ApiString);
 }
