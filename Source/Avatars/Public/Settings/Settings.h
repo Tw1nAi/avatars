@@ -15,17 +15,22 @@ struct FConversationSettings
   static inline const FString OpenAiApiName = FString("Open.ai API");
 
 public:
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Conversation Settings")
   FString TranscriptionApi = FString(TEXT("Rest Api"));
   FString GetTranscriptionApi() const;
   void SetTranscriptionApi(const FString& NewApi);
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Conversation Settings")
+  FString OpenApiKey = FString(TEXT(""));
+  FString GetOpenApiKey() const;
+  void SetOpenApiKey(const FString& NewApiKey);
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Conversation Settings")
   float AvatarChangeTimeout = 0.0f;
   FText GetAvatarChangeTimeoutText() const;
   void SetAvatarChangeTimeout(const float NewTimeout);
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Conversation Settings")
   float IdleGreetingTimeout = 0.0f;
   FText GetIdleGreetingTimeoutText() const;
   void SetIdleGreetingTimeout(const float NewTimeout);

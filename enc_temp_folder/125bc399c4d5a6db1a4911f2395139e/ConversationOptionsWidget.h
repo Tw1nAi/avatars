@@ -6,8 +6,6 @@
 #include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
 #include "Components/EditableText.h"
-#include "Components/EditableTextBox.h"
-#include "Components/PanelWidget.h"
 #include "CoreMinimal.h"
 #include "Styling/SlateTypes.h"
 #include "WidgetBase.h"
@@ -37,11 +35,7 @@ public:
   FString LastSavedApi;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UEditableTextBox* ApiKey;
-  UFUNCTION() void OnApiKeyChange(const FText& InText);
-  FDebouncer ChangeApiKeyDebounce{0.75f};
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-  UPanelWidget* OpenAiOptions;
+  UEditableText* ApiKey;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
   UEditableText* AvatarChangeDelayInput;

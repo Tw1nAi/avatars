@@ -32,6 +32,16 @@ void FConversationSettings::SetIdleGreetingTimeout(const float NewTimeout)
   IdleGreetingTimeout = NewTimeout;
 }
 
+FString FConversationSettings::GetOpenApiKey() const
+{
+  return OpenApiKey;
+}
+
+void FConversationSettings::SetOpenApiKey(const FString& NewApiKey)
+{
+  OpenApiKey = NewApiKey;
+}
+
 void FCameraSettings::SetCameraOffset(const FVector NewOffset)
 {
   CameraOffset = NewOffset;

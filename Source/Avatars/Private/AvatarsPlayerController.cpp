@@ -3,11 +3,13 @@
 
 #include "AvatarsPlayerController.h"
 
+// Engine
 #include "Components/AudioComponent.h"
 #include "GameFramework/GameUserSettings.h"
 #include "IWebSocket.h"
 #include "WebSocketsModule.h"
 
+// Custom
 #include "AiIdentity.h"
 #include "AiIntellectComponent.h"
 #include "AvatarPawn.h"

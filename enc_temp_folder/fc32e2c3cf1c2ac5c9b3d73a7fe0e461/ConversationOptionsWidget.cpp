@@ -2,17 +2,12 @@
 
 #include "UserInterface/ConversationOptionsWidget.h"
 
-// Engine
 #include "Misc/DefaultValueHelper.h"
 
-// Custom
 #include "AvatarsGame.h"
 #include "AvatarsPlayerController.h"
 #include "Log.h"
 #include "Persistance/PersistanceController.h"
-
-// Plugins
-#include "OpenAIUtils.h"
 
 DEFINE_LOG_CATEGORY(LogConversationOptionsWidget);
 
@@ -224,12 +219,6 @@ void UConversationOptionsWidget::SetTranscriptionApi(const FString& ApiString)
     return;
   }
 
-  UWorld* World = GetWorld();
-  if (ULog::ErrorIf(World == nullptr, "World is not valid.")) return;
-
-  UPersistanceController* Persistance = UAvatarsGame::GetPersistance(World);
-  if (ULog::ErrorIf(Persistance == nullptr, "Persistance is not valid")) return;
-
   FString Api = ApiString;
   if (Api.IsEmpty())
   {
@@ -243,16 +232,7 @@ void UConversationOptionsWidget::SetTranscriptionApi(const FString& ApiString)
   Persistance->SaveAll();
   LastSavedApi = Api;
   UE_LOG(LogConversationOptionsWidget, Display, TEXT("Transcription API changed to %s"), *Api);
-
-  if (Api == FConversationSettings::OpenAiApiName)
-  {
-    OpenAiOptions->SetVisibility(ESlateVisibility::Visible);
-    ApiKey->SetText(FText::FromString(Persistance->ConversationSettings.GetOpenApiKey()));
-  }
-  else
-  {
-    OpenAiOptions->SetVisibility(ESlateVisibility::Collapsed);
-  }
+  return;
 }
 
 void UConversationOptionsWidget::OnTranscriptionApiChange(FString ApiString, ESelectInfo::Type SelectionType)
@@ -275,10 +255,13 @@ void UConversationOptionsWidget::OnApiKeyChange(const FText& InText)
       [=, WeakThis = TWeakObjectPtr<UConversationOptionsWidget>(this)]() {
         if (ULog::ErrorIf(WeakThis == nullptr, "WeakThis is not valid")) return;
 
-        FString ApiKey = InText.ToString().TrimStartAndEnd();
-        UOpenAIUtils::setOpenAIApiKey(ApiKey);
-        Persistance->ConversationSettings.SetOpenApiKey(ApiKey);
-        Persistance->SaveAll();
+        if (WeakThis->GetController())
+        {
+          FString ApiKey = InText.ToString().TrimStartAndEnd();
+          WeakThis->SetOpenAiApiKey(ApiKey);
+          Persistance->ConversationSettings.SetOpenApiKey(ApiKey);
+          Persistance->SaveAll();
+        }
       },
       World
   );
