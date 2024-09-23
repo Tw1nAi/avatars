@@ -40,7 +40,8 @@ public:
 
 protected:
   // Called when the text is changed
-  void HandleOnTextChanged(const FText& Text);
+  UFUNCTION()
+  void CustomOnTextChanged(const FText& InText);
 
 private:
   // Filters the input text based on the selected filter mode

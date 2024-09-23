@@ -292,10 +292,6 @@ void AAvatarsPlayerController::SetupWhisperWebsockets()
     if (WeakController->bAudioCaptureBelowMinDuration)
     {
       WeakController->OnAudioCaptureTimerBelowMinimum();
-      if (AAvatarPawn* Avatar = WeakController->GetSelectedAvatar())
-      {
-        Avatar->SetState(EAvatarState::Idle);
-      }
       return;
     }
 
@@ -415,6 +411,12 @@ void AAvatarsPlayerController::OnAudioCaptureTimerBelowMinimum()
   bAudioCaptureBelowMinDuration = false;
   const FString InfoMessage = "Audio capture duration is below the minimum duration.";
   UE_LOG(LogAwatarsPlayerController, Display, TEXT("%s"), *InfoMessage);
+  // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, InfoMessage);
+  AAvatarPawn* Avatar = GetSelectedAvatar();
+  if (Avatar != nullptr)
+  {
+    Avatar->SetState(EAvatarState::Idle);
+  }
 }
 
 void AAvatarsPlayerController::EnableAudioCapture()
@@ -423,12 +425,15 @@ void AAvatarsPlayerController::EnableAudioCapture()
 
   const FString Message = MakeJsonString("message", "start_capture", "language", GetLanguageAsIsoString());
   WhisperWebsocket->Send(Message);
+
+  StartAudioCaptureTimer();
 }
 
 void AAvatarsPlayerController::DisableAudioCapture()
 {
   if (ULog::ErrorIf(!WhisperWebsocket.IsValid(), "!WhisperWebsocket.IsValid()")) return;
 
+  CheckAudioCaptureDuration();
   WhisperWebsocket->Send("stop_capture");
 }
 
@@ -910,29 +915,21 @@ AAvatarPawn* AAvatarsPlayerController::GetDefaultAvatar() const
   return SpawnedAvatars[0];
 }
 
-bool AAvatarsPlayerController::IsExcludedPhrase(const FString& Candidate) const
+bool AAvatarsPlayerController::IsExcludedPhrase(const FString& Phrase) const
 {
-  const FString CandidateTrimmed = Candidate.TrimStartAndEnd();
-  for (const FString& Excluded : ExcludedPhrases)
+  const FString CleanPhrase = Phrase.ToLower().TrimStartAndEnd();
+  for (const FString& String : ExcludedPhrases)
   {
-    FString ExcludedTrimmed = Excluded.TrimStartAndEnd();
+    FString CleanString = String.TrimStartAndEnd();
 
     // if its not one word phrase, make it lowercase,
     // otherwise keep it as it is to avoid triggering
-    // single words to be found within other words, e.g. low in lower
-    if (CandidateTrimmed.Contains(" "))
+    // single words to be found within other words.
+    if (String.Contains(" "))
     {
-      const FString CandidateLower = CandidateTrimmed.ToLower();
-      const FString ExcludedLower = ExcludedTrimmed.ToLower();
-      if (CandidateLower.Contains(ExcludedLower))
-      {
-        return true;
-      }
-      continue;
+      CleanString = CleanString.ToLower();
     }
-
-    // single words should be case sensitive
-    if (CandidateTrimmed.Contains(ExcludedTrimmed, ESearchCase::Type::CaseSensitive))
+    if (CleanPhrase.Contains(CleanString, ESearchCase::Type::CaseSensitive))
     {
       return true;
     }

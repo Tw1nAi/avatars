@@ -34,6 +34,14 @@ public:
   float IdleGreetingTimeout = 0.0f;
   FText GetIdleGreetingTimeoutText() const;
   void SetIdleGreetingTimeout(const float NewTimeout);
+
+  void CopyTo(FConversationSettings& Other) const
+  {
+    Other.TranscriptionApi = TranscriptionApi;
+    Other.OpenApiKey = OpenApiKey;
+    Other.AvatarChangeTimeout = AvatarChangeTimeout;
+    Other.IdleGreetingTimeout = IdleGreetingTimeout;
+  }
 };
 
 USTRUCT(BlueprintType, Blueprintable)

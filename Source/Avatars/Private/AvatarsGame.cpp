@@ -20,7 +20,10 @@ void UAvatarsGame::SetupPersistance()
   if (!PersistanceController->LoadAll())
   {
     PersistanceController->ConversationSettings = DefaultConversationSettings;
+    ULog::Warn(TEXT("Failed to load settings, using default settings"));
+    return;
   }
+  ULog::Info(TEXT("Settings loaded successfully"));
 }
 
 bool UAvatarsGame::Get(UAvatarsGame*& GameInstance, UWorld* World)

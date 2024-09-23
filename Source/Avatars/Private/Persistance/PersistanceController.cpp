@@ -11,8 +11,7 @@ void UPersistanceController::SaveAll()
   USettingsSaveGame* SettingsSaveGame = Cast<USettingsSaveGame>(UGameplayStatics::CreateSaveGameObject(USettingsSaveGame::StaticClass()));
   if (ULog::ErrorIf(SettingsSaveGame == nullptr, TEXT("Failed to create settings save game in UPersistanceController::SaveAll."))) return;
 
-  SettingsSaveGame->ConversationSettings.AvatarChangeTimeout = ConversationSettings.AvatarChangeTimeout;
-  SettingsSaveGame->ConversationSettings.IdleGreetingTimeout = ConversationSettings.IdleGreetingTimeout;
+  ConversationSettings.CopyTo(SettingsSaveGame->ConversationSettings);
   SettingsSaveGame->AvatarsSettings = AvatarsSettings;
 
   UGameplayStatics::SaveGameToSlot(SettingsSaveGame, SettingsSaveName, 0);
@@ -21,11 +20,9 @@ void UPersistanceController::SaveAll()
 bool UPersistanceController::LoadAll()
 {
   USettingsSaveGame* SettingsSaveGame = Cast<USettingsSaveGame>(UGameplayStatics::LoadGameFromSlot(SettingsSaveName, 0));
-  if (ULog::ErrorIf(SettingsSaveGame == nullptr, TEXT("Failed to load settings save game in UPersistanceController::LoadAll.")))
-    return false;
+  if (ULog::ErrorIf(SettingsSaveGame == nullptr, TEXT("Failed to load settings save game in UPersistanceController::LoadAll."))) return false;
 
-  ConversationSettings.AvatarChangeTimeout = SettingsSaveGame->ConversationSettings.AvatarChangeTimeout;
-  ConversationSettings.IdleGreetingTimeout = SettingsSaveGame->ConversationSettings.IdleGreetingTimeout;
+  SettingsSaveGame->ConversationSettings.CopyTo(ConversationSettings);
   AvatarsSettings = SettingsSaveGame->AvatarsSettings;
 
   return true;

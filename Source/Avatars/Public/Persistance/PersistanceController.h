@@ -15,7 +15,7 @@ class AVATARS_API UPersistanceController : public UObject
 public:
   /* The name of the file used to save application settings. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FString SettingsSaveName = TEXT("Settings");
+  FString SettingsSaveName = TEXT("AppSettings");
 
   UPROPERTY(VisibleAnywhere, Category = "Application Settings")
   FConversationSettings ConversationSettings;

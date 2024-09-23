@@ -201,7 +201,7 @@ public:
   TArray<FString> ExcludedPhrases;
 
   UFUNCTION(BlueprintCallable)
-  bool IsExcludedPhrase(const FString& Phrase) const;
+  bool IsExcludedPhrase(const FString& Candidate) const;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Transcription")
   bool bUseLocalTranscription = false;
@@ -235,11 +235,26 @@ public:
 
   UFUNCTION(Blueprintcallable)
   void EnableAudioCapture();
-  float AudioCaptureTimer = 0.0f;
-  bool bAudioCaptureBelowMinDuration = false;
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Audio Capture")
-  float MinAudioCaptureDuration = 0.4f;
 
   UFUNCTION(Blueprintcallable)
   void DisableAudioCapture();
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Audio Capture")
+  float AudioCaptureTimer = 0.0f;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Audio Capture")
+  bool bAudioCaptureBelowMinDuration = false;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Avatars Player Controller|Audio Capture")
+  float MinAudioCaptureDuration = 0.4f;
+
+  UFUNCTION(BlueprintCallable, Category = "Avatars Player Controller|Audio Capture")
+  void StartAudioCaptureTimer();
+
+  UFUNCTION(BlueprintCallable, Category = "Avatars Player Controller|Audio Capture")
+  bool CheckAudioCaptureDuration();
+
+  /* Checks the duration of the audio capture and returns the current value of the bAudioCaptureBelowMinDuration. */
+  UFUNCTION(BlueprintCallable, Category = "Avatars Player Controller|Audio Capture")
+  void OnAudioCaptureTimerBelowMinimum();
 };

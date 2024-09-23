@@ -11,10 +11,10 @@ UTextInputFiltered::UTextInputFiltered()
   bFilterOutWhiteSpaces = false;
 
   // Bind the text change event
-  OnTextChanged.AddDynamic(this, &UTextInputFiltered::HandleOnTextChanged);
+  OnTextChanged.AddDynamic(this, &UTextInputFiltered::CustomOnTextChanged);
 }
 
-void UTextInputFiltered::HandleOnTextChanged(const FText& InText)
+void UTextInputFiltered::CustomOnTextChanged(const FText& InText)
 {
   FString FilteredText = ApplyFilter(InText.ToString());
 

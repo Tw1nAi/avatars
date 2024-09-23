@@ -18,11 +18,10 @@ DEFINE_LOG_CATEGORY(LogConversationOptionsWidget);
 
 void UConversationOptionsWidget::NativeConstruct()
 {
-  AvatarChangeDelayInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnAvatarsChangeDelayChange);
+  UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld());
+  if (ULog::ErrorIf(Persistance == nullptr, "UConversationOptionsWidget::NativeConstruct: Persistance is not valid")) return;
 
-  IdleGreetingTimeoutInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnIdleGreetingTimeoutChange);
-
-  if (ULog::ErrorIf(!GetController(), "Could not get player controller")) return;
+  if (!GetController()) return;
 
   AvatarChangeDelayInput->SetText(PlayerController->ChangeAvatarTimeout.GetDelayAsText());
   IdleGreetingTimeoutInput->SetText(PlayerController->IdleGreetingTimeout.GetDelayAsText());
@@ -30,19 +29,14 @@ void UConversationOptionsWidget::NativeConstruct()
   TranscriptionApiComboBox->AddOption(FConversationSettings::RestApiName);
   TranscriptionApiComboBox->AddOption(FConversationSettings::OpenAiApiName);
 
-  if (UPersistanceController* Persistance = UAvatarsGame::GetPersistance(GetWorld()))
-  {
-    FString Api = Persistance->ConversationSettings.TranscriptionApi;
-    if (Api.IsEmpty())
-    {
-      Api = FString(FConversationSettings::RestApiName);
-    }
-    TranscriptionApiComboBox->SetSelectedOption(Api);
-    SetTranscriptionApi(Api);
-  }
+  FString Api = PlayerController->bUseLocalTranscription ? FConversationSettings::RestApiName : FConversationSettings::OpenAiApiName;
+  TranscriptionApiComboBox->SetSelectedOption(Api);
 
+  ApiKey->SetText(FText::FromString(Persistance->ConversationSettings.GetOpenApiKey()));
+
+  AvatarChangeDelayInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnAvatarsChangeDelayChange);
+  IdleGreetingTimeoutInput->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnIdleGreetingTimeoutChange);
   TranscriptionApiComboBox->OnSelectionChanged.AddDynamic(this, &UConversationOptionsWidget::OnTranscriptionApiChange);
-
   ApiKey->OnTextChanged.AddDynamic(this, &UConversationOptionsWidget::OnApiKeyChange);
 }
 
@@ -238,8 +232,8 @@ void UConversationOptionsWidget::SetTranscriptionApi(const FString& ApiString)
 
   if (!GetController()) return;
 
-  Persistance->ConversationSettings.SetTranscriptionApi(Api);
   PlayerController->SetUseLocalTranscription(Api == FConversationSettings::RestApiName);
+  Persistance->ConversationSettings.SetTranscriptionApi(Api);
   Persistance->SaveAll();
   LastSavedApi = Api;
   UE_LOG(LogConversationOptionsWidget, Display, TEXT("Transcription API changed to %s"), *Api);
@@ -279,6 +273,13 @@ void UConversationOptionsWidget::OnApiKeyChange(const FText& InText)
         UOpenAIUtils::setOpenAIApiKey(ApiKey);
         Persistance->ConversationSettings.SetOpenApiKey(ApiKey);
         Persistance->SaveAll();
+        // log new api key but only first four and four last characters, the rest are *
+        FString LogApiKey = ApiKey;
+        if (LogApiKey.Len() > 8)
+        {
+          LogApiKey = LogApiKey.Left(4) + FString::ChrN(LogApiKey.Len() - 8, '*') + LogApiKey.Right(4);
+        }
+        UE_LOG(LogConversationOptionsWidget, Display, TEXT("OpenAI API key changed to %s"), *LogApiKey);
       },
       World
   );
